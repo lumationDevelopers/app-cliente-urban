@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>878323724272-uvgk8ike3vntlrne0hioihmlvdn974er.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.878323724272-uvgk8ike3vntlrne0hioihmlvdn974er</string>
+	<key>API_KEY</key>
+	<string>AIzaSyByZmL0fZTl7pJBv6EES_6RCdiR5Ay3ZHI</string>
+	<key>GCM_SENDER_ID</key>
+	<string>878323724272</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>co.lumation.urbanclient</string>
+	<key>PROJECT_ID</key>
+	<string>urban-taxi-52112</string>
+	<key>STORAGE_BUCKET</key>
+	<string>urban-taxi-52112.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:878323724272:ios:eb25bd5337b9d19698b735</string>
+	<key>DATABASE_URL</key>
+	<string>https://urban-taxi-52112.firebaseio.com</string>
+</dict>
+</plist>

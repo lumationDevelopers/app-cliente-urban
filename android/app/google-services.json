@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "878323724272",
+    "firebase_url": "https://urban-taxi-52112.firebaseio.com",
+    "project_id": "urban-taxi-52112",
+    "storage_bucket": "urban-taxi-52112.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:878323724272:android:99491b035d46086898b735",
+        "android_client_info": {
+          "package_name": "co.lumation.urbanclient"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "878323724272-q0sniqkr820q20v7rtgnvkp6jmka43ko.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAdB96Hely3rzkc-4tBSGTL3VSXDT2OSsM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "878323724272-q0sniqkr820q20v7rtgnvkp6jmka43ko.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "878323724272-uvgk8ike3vntlrne0hioihmlvdn974er.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "co.lumation.urbanclient"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
