@@ -1,8 +1,10 @@
 import 'dart:convert';
 
 import 'package:after_init/after_init.dart';
+import 'package:back_button_interceptor/back_button_interceptor.dart';
 import 'package:client/bloc/address.bloc.dart';
 import 'package:client/bloc/provider.bloc.dart';
+import 'package:client/pages/user/favoriteLocationDetail.page.dart';
 import 'package:client/services/api.service.dart';
 import 'package:client/utils/utils.dart';
 import 'package:client/widgets/appBar.dart';
@@ -20,14 +22,28 @@ class _FavoriteLocationsPageState extends State<FavoriteLocationsPage> with Afte
   final _utils = new Utils();
 
   @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
+  void didInitState() {
+    //getData(addressBloc);
   }
 
   @override
-  void didInitState() {
-    //getData(addressBloc);
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    //BackButtonInterceptor.add(myInterceptor);
+  }
+
+
+  bool myInterceptor(bool stopDefaultButtonEvent, RouteInfo info) {
+    Navigator.of(context).pop();
+    return true;
+
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    //BackButtonInterceptor.remove(myInterceptor);
   }
 
   @override
@@ -69,11 +85,14 @@ class _FavoriteLocationsPageState extends State<FavoriteLocationsPage> with Afte
                                           ),
                                         ]
                                     ),
-                                    child: ListTile(
-                                      title: Container(
-                                        child: Text('${snapshot.data[index]['address_name']}', overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 20.0)),
+                                    child: InkWell(
+                                      onTap: () => Navigator.of(context).pushNamed('user/favorite-location-detail', arguments: FavoriteLocationDetailArguments(snapshot.data[index])),
+                                      child: ListTile(
+                                        title: Container(
+                                          child: Text('${snapshot.data[index]['address_name']}', overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 20.0)),
+                                        ),
+                                        subtitle: Text(snapshot.data[index]['address']),
                                       ),
-                                      subtitle: Text(snapshot.data[index]['address']),
                                     )
                                 );
                               },

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:after_init/after_init.dart';
+import 'package:back_button_interceptor/back_button_interceptor.dart';
 import 'package:client/pages/user/scheduledRideDetail.page.dart';
 import 'package:client/services/api.service.dart';
 import 'package:client/services/maps.service.dart';
@@ -27,7 +28,7 @@ class _ScheduledRidesPageState extends State<ScheduledRidesPage> with AfterInitM
 
     final data = jsonDecode(response.body);
 
-
+    print(data['data']);
     if (data['success'] == false) {
       Navigator.of(context).pop();
       return _utils.messageDialog(context, 'Error', 'No se pudieron cargar los datos.');
@@ -52,6 +53,20 @@ class _ScheduledRidesPageState extends State<ScheduledRidesPage> with AfterInitM
   void initState() {
     // TODO: implement initState
     super.initState();
+    //BackButtonInterceptor.add(myInterceptor);
+  }
+
+
+  bool myInterceptor(bool stopDefaultButtonEvent, RouteInfo info) {
+    Navigator.of(context).pop();
+    return true;
+
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    //BackButtonInterceptor.remove(myInterceptor);
   }
 
   @override
@@ -96,7 +111,7 @@ class _ScheduledRidesPageState extends State<ScheduledRidesPage> with AfterInitM
 
                         ListTile(
                                 title: Text('${rides[index]['destination']['address']}', overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 20.0)),
-                                subtitle: Text( new DateFormat('dd/MM/yyyy HH:MM').format(DateTime.parse(rides[index]['created_at']))),
+                                subtitle: Text( new DateFormat('dd/MM/yyyy HH:mm').format(DateTime.parse(rides[index]['request_time']))),
                                 trailing: Container(
                                   height: 42.0,
                                   child: Column(
@@ -138,9 +153,9 @@ class _ScheduledRidesPageState extends State<ScheduledRidesPage> with AfterInitM
                 children: <Widget>[
                   Icon(Icons.calendar_today, size: MediaQuery.of(context).size.width * 0.4),
                   Padding(padding: EdgeInsets.only(top: 42.0)),
-                  Text('No tienes ningún viaje programado', style: TextStyle(fontSize: 22.0, fontWeight: FontWeight.bold)),
+                  Text('No tienes ningún viaje programado', style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold)),
                   Padding(padding: EdgeInsets.only(top: 12.0)),
-                  Text('Programa un viaje con anticipación en el mapa y un piloto llegará por tí el día que desees.', textAlign: TextAlign.center, style: TextStyle(fontSize: 22.0))
+                  Text('Programa un viaje con anticipación en el mapa y un piloto llegará por tí el día que desees.', textAlign: TextAlign.center, style: TextStyle(fontSize: 18.0))
 
                 ],
               ),

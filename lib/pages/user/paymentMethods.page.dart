@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:after_init/after_init.dart';
+import 'package:back_button_interceptor/back_button_interceptor.dart';
 import 'package:client/bloc/cards.bloc.dart';
 import 'package:client/bloc/paymentMethods.bloc.dart';
 import 'package:client/bloc/provider.bloc.dart';
@@ -26,11 +27,6 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> with AfterInitM
   final _api = Api();
   final _utils = Utils();
 
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-  }
   List<Widget> getCards(List cards) {
 
     List<Widget> newPayments = [];
@@ -92,46 +88,47 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> with AfterInitM
 
     List<Widget> newPayments = [];
 
-    payments.removeWhere((element) => element['name'] == 'tarjeta');
-
     payments.forEach((e) {
-      newPayments.add(
-          Container(
-            height: 64.0,
-            width: double.infinity,
-            margin: EdgeInsets.symmetric(
-                vertical: 10.0, horizontal: 18.0),
-            padding: EdgeInsets.all(4.0),
-            decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16.0),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.2),
-                    spreadRadius: 5,
-                    blurRadius: 10,
-                    offset: Offset(0, 3),
-                  ),
-                ]
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Expanded(
-                    child: ListTile(
+      if (e['name'] != 'tarjeta') {
+        newPayments.add(
+            Container(
+              height: 64.0,
+              width: double.infinity,
+              margin: EdgeInsets.symmetric(
+                  vertical: 10.0, horizontal: 18.0),
+              padding: EdgeInsets.all(4.0),
+              decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16.0),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.2),
+                      spreadRadius: 5,
+                      blurRadius: 10,
+                      offset: Offset(0, 3),
+                    ),
+                  ]
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Expanded(
+                      child: ListTile(
                         title: Text(e['display_name'].toString(),
                             style: TextStyle(fontSize: 20.0)),
                         leading: Container(
                           width: 42.0,
                           child: SvgPicture.network(e['logo'].toString()),
                         ),
-                    )
-                ),
-              ],
-            ),
-          )
-      );
+                      )
+                  ),
+                ],
+              ),
+            )
+        );
+      }
+
     });
 
     return newPayments;
@@ -142,6 +139,26 @@ class _PaymentMethodsPageState extends State<PaymentMethodsPage> with AfterInitM
   @override
   void didInitState() {
     // TODO: implement didInitState
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    //BackButtonInterceptor.add(myInterceptor);
+  }
+
+
+  bool myInterceptor(bool stopDefaultButtonEvent, RouteInfo info) {
+    Navigator.of(context).pop();
+    return true;
+
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    //BackButtonInterceptor.remove(myInterceptor);
   }
 
 

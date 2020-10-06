@@ -1,3 +1,4 @@
+import 'package:back_button_interceptor/back_button_interceptor.dart';
 import 'package:client/widgets/appBar.dart';
 import 'package:flutter/material.dart';
 
@@ -7,6 +8,26 @@ class PrivacyOptionsPage extends StatefulWidget {
 }
 
 class _PrivacyOptionsPageState extends State<PrivacyOptionsPage> {
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    //BackButtonInterceptor.add(myInterceptor);
+  }
+
+
+  bool myInterceptor(bool stopDefaultButtonEvent, RouteInfo info) {
+    Navigator.of(context).pop();
+    return true;
+
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    //BackButtonInterceptor.remove(myInterceptor);
+  }
 
   @override
   Widget build(BuildContext context) {

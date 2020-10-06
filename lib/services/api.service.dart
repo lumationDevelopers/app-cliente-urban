@@ -74,6 +74,7 @@ class Api extends http.BaseClient {
     final response = await get('$baseUrl$path');
 
     if (response.statusCode == 401) {
+      print('401');
       Navigator.of(context).pushReplacementNamed('/login');
       return response;
     }

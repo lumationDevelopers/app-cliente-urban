@@ -43,19 +43,16 @@ class _LoginPageState extends State<LoginPage> {
   String _debugLabelString = "";
 
   Future initPlatformState(userEmail) async {
-    if (!mounted) return;
+    /*await OneSignal.shared.setLogLevel(OSLogLevel.verbose, OSLogLevel.none);
 
-    await OneSignal.shared.setLogLevel(OSLogLevel.verbose, OSLogLevel.none);
-
-    await OneSignal.shared.setRequiresUserPrivacyConsent(false);
+    //await OneSignal.shared.setRequiresUserPrivacyConsent(false);
 
     var settings = {
       OSiOSSettings.autoPrompt: true,
-      OSiOSSettings.promptBeforeOpeningPushUrl: true,
       OSiOSSettings.inAppLaunchUrl: false
     };
 
-    OneSignal.shared.setNotificationReceivedHandler((OSNotification notification) {
+    /*OneSignal.shared.setNotificationReceivedHandler((OSNotification notification) {
       this.setState(() {
         _debugLabelString =
         "Received notification: \n${notification.jsonRepresentation().replaceAll("\\n", "\n")}";
@@ -78,19 +75,16 @@ class _LoginPageState extends State<LoginPage> {
       });
     });
 
+     */
+
     await OneSignal.shared.init("d8d7f226-00d2-41ab-84c4-4bdf12b30c6d", iOSSettings: settings);
 
     await OneSignal.shared.setInFocusDisplayType(OSNotificationDisplayType.notification);
 
-    //await OneSignal.shared.setEmail(email: userEmail);
+    //await OneSignal.shared.setEmail(email: userEmail);*/
 
     final status = await OneSignal.shared.getPermissionSubscriptionState();
     String oneSignalUserId = status.subscriptionStatus.userId;
-
-    final email = status.emailSubscriptionStatus.emailUserId;
-    print(oneSignalUserId);
-    print(email);
-
     return oneSignalUserId;
 
   }
@@ -205,14 +199,11 @@ class _LoginPageState extends State<LoginPage> {
         rideStatusBloc.modifyRideStatus('Pending');
       }
 
-      final playerId = await initPlatformState(userData['data']['user']['email']);
-
-      print(playerId);
-      final playerIdResponse = await _api.putByPath(context, 'users/addplayerid', {
-        "playerid": playerId
+      initPlatformState(userData['data']['user']['email']).then((playerId) {
+        _api.putByPath(context, 'users/addplayerid', {
+          "playerid": playerId
+        });
       });
-
-      print(jsonDecode(playerIdResponse.body));
 
       _utils.closeDialog(context);
       Navigator.of(context).pushNamedAndRemoveUntil('/home', (_) => false);
@@ -237,12 +228,27 @@ class _LoginPageState extends State<LoginPage> {
 
     final result = await _googleSignIn.signIn();
 
+    _utils.closeDialog(context);
+
     result.authentication.then((googleKey) async {
       print(googleKey.idToken);
 
-      final token = googleKey.idToken;
+      _utils.loadingDialog(context);
+
+      String token;
+      String platform;
+
+      if (Platform.isAndroid) {
+        platform = 'android';
+        token = googleKey.idToken;
+      } else {
+        platform = 'ios';
+        token = googleKey.idToken;
+      }
+
       final response = await _auth.postByPath(context, 'googlesignin', {
-        "id_token": token
+        "id_token": token,
+        "os": platform
       });
 
       final responseData = jsonDecode(response.body);
@@ -332,21 +338,17 @@ class _LoginPageState extends State<LoginPage> {
         rideStatusBloc.modifyRideStatus('Pending');
       }
 
-      final playerId = await initPlatformState(userData['data']['user']['email']);
-
-      print(playerId);
-      final playerIdResponse = await _api.putByPath(context, 'users/addplayerid', {
-        "playerid": playerId
+      initPlatformState(userData['data']['user']['email']).then((playerId) {
+        _api.putByPath(context, 'users/addplayerid', {
+          "playerid": playerId
+        });
       });
-
-      print(jsonDecode(playerIdResponse.body));
 
       _utils.closeDialog(context);
       Navigator.of(context).pushNamedAndRemoveUntil('/home', (_) => false);
 
       print(responseData);
     }).catchError((err){
-      _utils.closeDialog(context);
       _utils.messageDialog(context, 'Error', 'Hubo un error al conectar con los servicios de Google. Inténtalo de nuevo');
     });
 
@@ -417,19 +419,16 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               Center(
-                child: StreamBuilder(
-                    stream: bloc.userStream,
-                    builder: (context, snapshot) {
-                      return defaultButton(
-                          MediaQuery.of(context).size.width * 0.55,
-                          'Iniciar sesión',
-                              () async {
-                            if (_loginForm.currentState.validate()) {
-                              _loginForm.currentState.save();
+                child: defaultButton(
+                    MediaQuery.of(context).size.width * 0.55,
+                    'Iniciar sesión',
+                        () async {
+                      if (_loginForm.currentState.validate()) {
+                        _loginForm.currentState.save();
 
-                              _utils.loadingDialog(context);
+                        _utils.loadingDialog(context);
 
-                              DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+                        DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
                               var deviceName;
 
                               if (Platform.isAndroid) {
@@ -438,78 +437,109 @@ class _LoginPageState extends State<LoginPage> {
                                 deviceName = (await deviceInfo.iosInfo).utsname.machine;
                               }
 
-                              final data = {
-                                "grant_type": "password",
-                                "username": _email,
-                                "password": _password,
-                                "deviceName": deviceName,
-                                "ip": await GetIp.ipAddress
-                              };
+                        final data = {
+                          "grant_type": "password",
+                          "username": _email,
+                          "password": _password,
+                          "deviceName": deviceName,
+                          "ip": await GetIp.ipAddress
+                        };
 
-                              final response = await _auth.login(data);
+                        final response = await _auth.login(data);
 
+                        if (response.statusCode != 200) {
+                          _utils.closeDialog(context);
+                          return _utils.messageDialog(context, 'No se inicio sesión', jsonDecode(response.body)['error']['errors'][0]);
+                        }
 
-                              if (response.statusCode != 200) {
-                                _utils.closeDialog(context);
-                                return _utils.messageDialog(context, 'No se inicio sesión', jsonDecode(response.body)['error']['errors'][0]);
-                              }
+                        final instance = await SharedPreferences.getInstance();
 
-                              final instance = await SharedPreferences.getInstance();
+                        instance.setString('user_token', jsonDecode(response.body)['access_token']);
 
-                              instance.setString('user_token', jsonDecode(response.body)['access_token']);
+                        final userResponse = await _api.getByPath(context, 'auth/me');
 
-                              final userResponse = await _api.getByPath(context, 'auth/me');
+                        if (userResponse.statusCode != 200) {
+                          _utils.closeDialog(context);
+                          return _utils.messageDialog(context, 'No se inicio sesión', 'Hubo algún error en el servidor. Inténtalo de nuevo' );
+                        }
 
-                              if (userResponse.statusCode != 200) {
-                                _utils.closeDialog(context);
-                                return _utils.messageDialog(context, 'No se inicio sesión', 'Hubo algún error en el servidor. Inténtalo de nuevo' );
-                              }
+                        final userData = jsonDecode(userResponse.body);
 
-                              final userData = jsonDecode(userResponse.body);
+                        final addressResponse = await _api.getByPath(context, 'address/all/${userData['data']['user']['_id']}');
 
-                              final addressResponse = await _api.getByPath(context, 'address/all/${userData['data']['user']['_id']}');
+                        if (addressResponse.statusCode != 200) {
+                          _utils.closeDialog(context);
+                          return _utils.messageDialog(context, 'No se inicio sesión', 'Hubo algún error en el servidor. Inténtalo de nuevo' );
+                        }
 
-                              if (addressResponse.statusCode != 200) {
-                                _utils.closeDialog(context);
-                                return _utils.messageDialog(context, 'No se inicio sesión', 'Hubo algún error en el servidor. Inténtalo de nuevo' );
-                              }
+                        final addressData = jsonDecode(addressResponse.body);
 
-                              final addressData = jsonDecode(addressResponse.body);
+                        final cardsResponse = await _api.getByPath(context, 'cards/owncards/${userData['data']['user']['_id']}');
 
-                              print(userData);
+                        print(cardsResponse);
+                        if (cardsResponse.statusCode != 200) {
+                          _utils.closeDialog(context);
 
-                              final cardsResponse = await _api.getByPath(context, 'cards/owncards/${userData['data']['user']['_id']}');
+                          return _utils.messageDialog(context, 'No se inicio sesión', 'Hubo algún error en el servidor. Inténtalo de nuevo' );
+                        }
 
-                              print(cardsResponse.body);
+                        final cardsData = jsonDecode(cardsResponse.body);
 
-                              if (cardsResponse.statusCode != 200) {
-                                _utils.closeDialog(context);
+                        cardsBloc.modifyCards(cardsData['data']);
+                        addressBloc.modifyAddresses(addressData['data']);
+                        bloc.modifyUserData(userData['data']['user']);
 
-                                return _utils.messageDialog(context, 'No se inicio sesión', 'Hubo algún error en el servidor. Inténtalo de nuevo' );
-                              }
+                        final paymentsResponse = await _api.getByPath(context, 'paymentmethods');
 
-                              final cardsData = jsonDecode(cardsResponse.body);
+                        final paymentsData = jsonDecode(paymentsResponse.body);
+                        if (paymentsResponse.statusCode == 200) {
+                          paymentMethodsBloc.modifyPaymentMethods(paymentsData['data']);
+                        } else {
+                          paymentMethodsBloc.modifyPaymentMethods([]);
+                        }
 
-                              cardsBloc.modifyCards(cardsData['data']);
-                              addressBloc.modifyAddresses(addressData['data']);
-                              bloc.modifyUserData(userData['data']['user']);
+                        if (cardsData['data'].length > 0) {
+                          paymentMethodSelectedBloc.modifyPaymentMethodSelected({
+                            ...(paymentsData['data'] as List).firstWhere((element) => element['_id'] == '5f188197ebddcb29eccc5eb5'),
+                            "card": cardsData['data'][0]['_id'],
+                            "last4": cardsData['data'][0]['last4'],
+                          });
+                        } else {
+                          paymentMethodSelectedBloc.modifyPaymentMethodSelected({
+                            ...(paymentsData['data'] as List).firstWhere((element) => element['_id'] == '5f188138ebddcb29eccc5eb4'),
+                          });
+                        }
 
-                              _utils.closeDialog(context);
+                        if (userData['data']['user']['current_trip'] != null) {
 
-                              final playerId = await initPlatformState(userData['data']['user']['email']);
+                          final rideResponse = await _api.getByPath(context, 'trips/${userData['data']['user']['current_trip']}');
 
-                              print(playerId);
-                              final playerIdResponse = await _api.putByPath(context, 'users/addplayerid', {
-                                "playerid": playerId
-                              });
-
-                              print(jsonDecode(playerIdResponse.body));
-
-                              Navigator.of(context).pushNamedAndRemoveUntil('/home', (_) => false);
-                            }
-
+                          if (rideResponse.statusCode != 200) {
+                            rideStatusBloc.modifyRideStatus('Pending');
+                            _utils.closeDialog(context);
+                            return _utils.messageDialog(context, 'No se inicio sesión', 'Hubo algún error en el servidor. Inténtalo de nuevo' );
                           }
-                      );
+
+                          final rideData = jsonDecode(rideResponse.body);
+
+                          rideBloc.modifyRideData(rideData['data']);
+
+                          rideStatusBloc.modifyRideStatus('Started');
+                        } else {
+                          rideStatusBloc.modifyRideStatus('Pending');
+                        }
+
+                        _utils.closeDialog(context);
+
+                        initPlatformState(userData['data']['user']['email']).then((playerId) {
+                          _api.putByPath(context, 'users/addplayerid', {
+                            "playerid": playerId
+                          });
+                        });
+
+                        Navigator.of(context).pushNamedAndRemoveUntil('/home', (_) => false);
+                      }
+
                     }
                 )
               ),

@@ -9,6 +9,7 @@ import 'package:client/bloc/provider.bloc.dart';
 import 'package:client/bloc/ride.bloc.dart';
 import 'package:client/bloc/rideStatus.bloc.dart';
 import 'package:client/bloc/user.bloc.dart';
+import 'package:client/credentials.dart';
 import 'package:client/pages/auth/register-social.page.dart';
 import 'package:client/services/api.service.dart';
 import 'package:client/services/auth.service.dart';
@@ -48,6 +49,14 @@ class _RegisterPageState extends State<RegisterPage> {
   var password;
   var username;
   var birthday;
+
+  final FocusNode _firstNameFocus = FocusNode();
+  final FocusNode _lastNameFocus = FocusNode();
+  final FocusNode _phoneNumberFocus = FocusNode();
+  final FocusNode _emailFocus = FocusNode();
+  final FocusNode _passwordFocus = FocusNode();
+  final FocusNode _usernameFocus = FocusNode();
+
 
   bool sharePhone = true;
 
@@ -122,8 +131,20 @@ class _RegisterPageState extends State<RegisterPage> {
     result.authentication.then((googleKey){
       print(googleKey.idToken);
 
+      String token;
+      String platform;
+
+      if (Platform.isAndroid) {
+        platform = 'android';
+        token = googleKey.idToken;
+      } else {
+        platform = 'ios';
+        token = googleKey.idToken;
+      }
+
       Navigator.of(context).pushNamed('auth/register/social', arguments: RegisterSocialPageArguments('googlesignup', 'googlesignin',{
-        "id_token": googleKey.idToken
+        "id_token": token,
+        "os": platform
       }));
     }).catchError((err){
       print('inner error');
@@ -228,6 +249,11 @@ class _RegisterPageState extends State<RegisterPage> {
 
   }
 
+  _fieldFocusChange(BuildContext context, FocusNode currentFocus,FocusNode nextFocus) {
+    currentFocus.unfocus();
+    FocusScope.of(context).requestFocus(nextFocus);
+  }
+
   @override
   Widget build(BuildContext context) {
     bloc = Provider.of(context).userBloc;
@@ -238,6 +264,8 @@ class _RegisterPageState extends State<RegisterPage> {
     rideBloc =  Provider.of(context).rideBloc;
     rideStatusBloc =  Provider.of(context).rideStatusBloc;
 
+    final FocusNode _heightFocus = FocusNode();
+
     return Scaffold(
       appBar: urbanAppBar(context, 'Regístrate', false),
       body: Container(
@@ -247,6 +275,11 @@ class _RegisterPageState extends State<RegisterPage> {
             padding: EdgeInsets.all(26.0),
             children: <Widget>[
               TextFormField(
+                textInputAction: TextInputAction.next,
+                focusNode: _usernameFocus,
+                onFieldSubmitted: (term){
+                  _fieldFocusChange(context, _usernameFocus, _firstNameFocus);
+                },
                 validator: (v) => v == '' ? 'Este campo es obligatorio' : null,
                 onChanged: (v) => username = v,
                 decoration: InputDecoration(
@@ -259,6 +292,11 @@ class _RegisterPageState extends State<RegisterPage> {
                   Expanded(
                     flex: 8,
                     child: TextFormField(
+                      textInputAction: TextInputAction.next,
+                      focusNode: _firstNameFocus,
+                      onFieldSubmitted: (term){
+                        _fieldFocusChange(context, _firstNameFocus, _lastNameFocus);
+                      },
                       validator: (v) => v == '' ? 'Este campo es obligatorio' : null,
                       onChanged: (v) => firstName = v,
                       decoration: InputDecoration(
@@ -270,6 +308,11 @@ class _RegisterPageState extends State<RegisterPage> {
                   Expanded(
                     flex: 8,
                     child: TextFormField(
+                      textInputAction: TextInputAction.next,
+                      focusNode: _lastNameFocus,
+                      onFieldSubmitted: (term){
+                        _fieldFocusChange(context, _lastNameFocus, _phoneNumberFocus);
+                      },
                       validator: (v) => v == '' ? 'Este campo es obligatorio' : null,
                       onChanged: (v) => lastName = v,
                       decoration: InputDecoration(
@@ -299,6 +342,11 @@ class _RegisterPageState extends State<RegisterPage> {
                 children: <Widget>[
                   Expanded(
                     child: TextFormField(
+                      textInputAction: TextInputAction.done,
+                      focusNode: _phoneNumberFocus,
+                      onFieldSubmitted: (term){
+                        _phoneNumberFocus.unfocus();
+                      },
                       validator: (v) {
                         if (v == '') {
                           return 'Este campo es obligatorio';
@@ -384,6 +432,11 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
               Padding(padding: EdgeInsets.only(top: 16.0)),
               TextFormField(
+                textInputAction: TextInputAction.next,
+                focusNode: _emailFocus,
+                onFieldSubmitted: (term){
+                  _fieldFocusChange(context, _emailFocus, _passwordFocus);
+                },
                 validator: (v) {
                   final RegExp validator = RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+");
                   if (v == '') {
@@ -402,6 +455,11 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
               Padding(padding: EdgeInsets.only(top: 16.0)),
               TextFormField(
+                textInputAction: TextInputAction.done,
+                focusNode: _passwordFocus,
+                onFieldSubmitted: (term){
+                  _passwordFocus.unfocus();
+                },
                 validator: (v) => v == '' ? 'Este campo es obligatorio' : null,
                 onChanged: (v) => password = v,
                 obscureText: true,

@@ -19,6 +19,7 @@ import 'package:client/pages/user/changePersonalInfo.page.dart';
 import 'package:client/pages/user/changePhoneNumber.page.dart';
 import 'package:client/pages/user/chargePasswordStep1.page.dart';
 import 'package:client/pages/user/contactUs.page.dart';
+import 'package:client/pages/user/favoriteLocationDetail.page.dart';
 import 'package:client/pages/user/favoriteLocations.page.dart';
 import 'package:client/pages/user/paymentMethodSelect.page.dart';
 import 'package:client/pages/user/paymentMethods.page.dart';
@@ -62,6 +63,7 @@ final Map<String, WidgetBuilder> routes = <String, WidgetBuilder>{
   'user/privacy': (BuildContext context) => PrivacyPage(),
   'user/privacy-options': (BuildContext context) => PrivacyOptionsPage(),
   'user/favorite-locations': (BuildContext context) => FavoriteLocationsPage(),
+  'user/favorite-location-detail': (BuildContext context) => FavoriteLocationDetailPage(),
   'user/add-favorite-location': (BuildContext context) => AddFavoriteLocationPage(),
   'user/add-favorite-location-info': (BuildContext context) => AddFavoriteLocationInfoPage(),
   'ride/pilot-selected': (BuildContext context) => RidePilotInfoPage(),

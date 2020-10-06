@@ -91,6 +91,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     mapController = controller;
 
     mapController.setMapStyle('[{"elementType": "geometry","stylers":[{"color":"#e6eef4"}]}, {"featureType": "road","elementType": "geometry","stylers":[{"color":"#FFFFFF"}]}]');
+
   }
 
   List<dynamic> currentPlaces = [];
@@ -214,10 +215,27 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     });
   }
 
+  getLocationByPlaceId() async {
+
+    if (currentSearchedPlace == null) {
+      Response detailResponse = await Dio().get('$googleDetailUrl?json&place_id=${placeSelected['place_id']}&key=$googleMapsKey');
+
+      currentSearchedPlace = detailResponse.data['result']['geometry']['location'];
+      //final currentPosition = await getCurrentPosition();
+
+      LatLng searchPosition = LatLng(currentSearchedPlace['lat'], currentSearchedPlace['lng']);
+      setLocationOnMap(context, searchPosition);
+    } else {
+      setLocationOnMap(context, LatLng(currentSearchedPlace['lat'], currentSearchedPlace['lng']));
+    }
+
+
+  }
+
   @override
   void initState() {
     super.initState();
-    getUserInfo();
+
     BackButtonInterceptor.add(myInterceptor);
   }
 
@@ -228,10 +246,18 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     _getInfoTimer.cancel();
   }
 
+  bool searchListIsOpen = false;
   bool myInterceptor(bool stopDefaultButtonEvent, RouteInfo info) {
-    _sheetController.snapToPosition(SnapPosition(positionFactor: 0.0));
-    FocusManager.instance.primaryFocus.unfocus();
-    return true;
+    if (searchListIsOpen) {
+      _sheetController.snapToPosition(SnapPosition(positionFactor: 0.0));
+      FocusManager.instance.primaryFocus.unfocus();
+      searchListIsOpen = false;
+      return true;
+    } else {
+      //Navigator.of(context).pop();
+      return false;
+    }
+
   }
 
   Future<Position> getCurrentPosition() async {
@@ -248,7 +274,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   var _socket;
 
   void setLocationOnMap(BuildContext context, LatLng destination, { LatLng waypoint }) async {
-    _sheetController.snapToPosition(SnapPosition(positionFactor: -0.4));
+    //_sheetController.snapToPosition(SnapPosition(positionFactor: -0.4));
 
     utils.loadingDialog(context);
 
@@ -315,18 +341,19 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
     _sheetController.snapToPosition(SnapPosition(positionFactor: 0.0));
 
-    LatLngBounds bound;
+    LatLngBounds bound = boundsFromLatLngList([_center, destination]);
     double distance;
 
-    if (destination.latitude > _center.latitude) {
+    /*if (destination.latitude > _center.latitude) {
       distance = 120;
       bound = LatLngBounds(southwest: _center, northeast: destination);
     } else {
       distance = 140;
       bound = LatLngBounds(southwest: destination, northeast: _center );
-    }
+    }*/
 
-    CameraUpdate u2 = CameraUpdate.newLatLngBounds(bound, distance);
+
+    CameraUpdate u2 = CameraUpdate.newLatLngBounds(bound, 120);
 
     this.mapController.animateCamera(u2);
 
@@ -456,24 +483,166 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
   }
 
+  void confirmRide(BuildContext context) async {
+    setState(() {
+      lookingForPilot = true;
+      mapScaleHeight = 1.0;
+    });
+
+    await new Future.delayed(const Duration(seconds: 3), () => "1");
+
+    setState(() {
+      showUrbanServices = false;
+    });
+    final service = urbanServices.firstWhere((element) => element['selected'] == true);
+
+    final data = {
+      "service": {
+        "id": service['_id']
+      },
+      "payment_method": {
+        "id": paymentMethodSelectedBloc.paymentMethodSelect['_id']
+      },
+      "pickup": {
+        "zone": "-",
+        "address": _userCurrentPositionAddress,
+        "type": "Point",
+        "coordinates": "${_center.latitude},${_center.longitude}"
+      },
+      "destination": {
+        "zone": "-",
+        "address": placeSelected['description'],
+        "type": "Point",
+        "coordinates": "${currentSearchedPlace['lat']},${currentSearchedPlace['lng']}"
+      },
+      "stops": [],
+      "contact_form": {
+        "id": "5eeaa745189c16383c457cf9"
+      },
+      "distance_estimate": service['distance'],
+      "time_estimate": service['duration'],
+      "scheduled": scheduledRide == null ? false : true,
+      "fare": service['price'],
+    };
+
+    if (paymentMethodSelectedBloc.paymentMethodSelect['name'] == 'tarjeta') {
+      data['card'] = {
+        'id': paymentMethodSelectedBloc.paymentMethodSelect['card']
+      };
+    }
+
+    if(scheduledRide != null) {
+      data['pickup_time'] = (new DateFormat('dd/MM/yyyy HH:mm').format(scheduledRide)).toString();
+    }
+
+    if (currentWaypointLocation != null) {
+      data['stops'] = [
+        {
+          "zone": "-",
+          "address": currentWaypointAddress,
+          "type": "Point",
+          "coordinates": "${currentWaypointLocation.latitude},${currentWaypointLocation.longitude}"
+        }
+      ];
+    }
+
+    var rideResponse;
+
+    if (scheduledRide == null) {
+      rideResponse = await _api.postByPath(context, 'trips/newtrip', data);
+    } else {
+      rideResponse = await _api.postByPath(context, 'trips/newscheduledtrip', data);
+    }
+
+    final rideData = jsonDecode(rideResponse.body);
+
+    if (rideData['success'] == false) {
+      setState(() {
+        mapScaleHeight = 1.0;
+        _polyLines = {};
+        markers = {};
+        showUrbanServices = false;
+        lookingForPilot = false;
+      });
+
+
+
+      _sheetController.snapToPosition(SnapPosition(positionFactor: 0.0));
+
+      if (rideData['error']['errors'][0] == 'No se encontro ningun piloto') {
+        return setState(() {
+          noPilots = true;
+        });
+      }
+
+      setState(() {
+        _polyLines = {};
+        markers = {};
+        mapScaleHeight = 1.0;
+      });
+
+      print(rideResponse.body);
+
+      return utils.messageDialog(context, 'Viaje no confirmado', 'Hubo algún error. Inténtalo de nuevo.');
+    }
+
+    if (scheduledRide != null) {
+      setState(() {
+        lookingForPilot = false;
+        _polyLines = {};
+        markers = {};
+        mapScaleHeight = 1.0;
+        showUrbanServices = false;
+      });
+
+      rideStatusBloc.modifyRideStatus('Pending');
+      _sheetController.snapToPosition(SnapPosition(positionFactor: 0.0));
+
+      return utils.messageDialog(context, 'Solicitado', 'Se ha solicitado un viaje programado. Un piloto llegará a la hora indicada');
+    }
+
+    scheduledRide = null;
+
+
+    rideBloc.modifyRideData(rideData['data']);
+
+    rideStatusBloc.modifyRideStatus('Started');
+
+    setState(() {
+      mapScaleHeight = 1.0;
+      //_polyLines = {};
+      //markers = {};
+      showUrbanServices = false;
+      onRide = true;
+    });
+
+    rideBloc.modifyRideData(rideData['data']);
+
+    startChat(rideData['data']);
+
+    startRide(rideData['data']['_id']);
+
+    _sheetController.snapToPosition(SnapPosition(positionFactor: 0.0));
+  }
+
   String _userCurrentPositionAddress = '';
   void mapUserLocation() async {
     final icon = await BitmapDescriptor.fromAssetImage(ImageConfiguration(devicePixelRatio: 2.5), 'assets/rides/origin-lx.png');
     getCurrentPosition().then((Position position) async {
+      final MarkerId markerId = MarkerId('start');
+      Marker resultMarker = Marker(
+        markerId: MarkerId('start'),
+        icon: icon,
+        position: LatLng(position.latitude, position.longitude),
+      );
       setState(() {
-        final MarkerId markerId = MarkerId('start');
-        Marker resultMarker = Marker(
-          markerId: MarkerId('start'),
-          icon: icon,
-          position: LatLng(position.latitude, position.longitude),
-        );
         markers[markerId] = resultMarker;
         _center = LatLng(position.latitude, position.longitude);
         _centerAngle = position.heading;
-        CameraUpdate u2 = CameraUpdate.newLatLngZoom(_center, 17.0);
-        mapController.animateCamera(u2);
       });
 
+      CameraUpdate u2 = CameraUpdate.newLatLngZoom(_center, 17.0);
+      mapController.animateCamera(u2);
 
       Response searchResponse = await Dio().get('https://maps.googleapis.com/maps/api/geocode/json?latlng=${position.latitude},${position.longitude}&key=$googleMapsKey');
 
@@ -545,33 +714,61 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     _socket.on('fromServer', (_) => print('asdsdsd' + jsonDecode(_)));
   }
 
+  bool waypointIsOrigin = false;
   List waypoints;
   String currentWaypointAddress;
   LatLng currentWaypointLocation;
   CameraPosition mapWaypointPosition;
+  String currentPlaceId = '';
 
   Future locationMap() async {
 
       Response searchResponse = await Dio().get('https://maps.googleapis.com/maps/api/geocode/json?latlng=${mapWaypointPosition.target.latitude},${mapWaypointPosition.target.longitude}&key=$googleMapsKey');
 
       if (searchResponse.data['results'].length > 0) {
-        setState(() {
-          currentWaypointAddress = searchResponse.data['results'][0]['formatted_address'];
-          currentWaypointLocation = LatLng(mapWaypointPosition.target.latitude, mapWaypointPosition.target.longitude);
-          /*waypoints.add({
+        if (!waypointIsOrigin) {
+          setState(() {
+            currentWaypointAddress = searchResponse.data['results'][0]['formatted_address'];
+            currentWaypointLocation = LatLng(mapWaypointPosition.target.latitude, mapWaypointPosition.target.longitude);
+            /*waypoints.add({
             "address": searchResponse.data['results'][0]['formatted_address'],
             "location": [, ]
           });*/
-        });
+          });
+        } else {
+          setState(() {
+            _userCurrentPositionAddress = searchResponse.data['results'][0]['formatted_address'];
+            _center = LatLng(mapWaypointPosition.target.latitude, mapWaypointPosition.target.longitude);
+            /*waypoints.add({
+            "address": searchResponse.data['results'][0]['formatted_address'],
+            "location": [, ]
+          });*/
+          });
+          getLocationByPlaceId();
+        }
+
       } else {
-        setState(() {
-          currentWaypointAddress = "Unamed Road";
-          currentWaypointLocation = LatLng(mapWaypointPosition.target.latitude, mapWaypointPosition.target.longitude);
-          /*waypoints.add({
+        if (!waypointIsOrigin) {
+          setState(() {
+            currentWaypointAddress = "Unamed Road";
+            currentWaypointLocation = LatLng(mapWaypointPosition.target.latitude, mapWaypointPosition.target.longitude);
+            /*waypoints.add({
             "address": "Unamed Road",
             "location": [position.target.latitude, position.target.longitude]
           });*/
-        });
+          });
+        } else {
+          setState(() {
+            _userCurrentPositionAddress = "Unamed Road";
+            _center = LatLng(mapWaypointPosition.target.latitude, mapWaypointPosition.target.longitude);
+            /*waypoints.add({
+            "address": "Unamed Road",
+            "location": [position.target.latitude, position.target.longitude]
+          });*/
+          });
+          getLocationByPlaceId();
+        }
+
       }
 
       return 0;
@@ -583,11 +780,11 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   void didInitState() {
     // TODO: implement didInitState
 
-    mapUserLocation();
-    _getInfoTimer = Timer.periodic(Duration(minutes: 2), (timer) {
+      mapUserLocation();
       getUserInfo();
-    });
-
+      _getInfoTimer = Timer.periodic(Duration(minutes: 2), (timer) {
+        getUserInfo();
+      });
     /*if (rideStatusBloc.rideStatus != 'Pending') {
       startChat(rideBloc.rideInfo);
       startRide(rideBloc.rideInfo['_id']);
@@ -614,6 +811,10 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       }
 
       final rideData = jsonDecode(rideResponse.body);
+
+      setState(() {
+        rideAccepted = true;
+      });
 
       rideBloc.modifyRideData(rideData['data']);
       print(rideData['data']['trip_status']);
@@ -645,8 +846,6 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     chatSocketBloc = Provider.of(context).chatSocketBloc;
     rideStatusBloc = Provider.of(context).rideStatusBloc;
     paymentMethodSelectedBloc = Provider.of(context).paymentMethodSelectedBloc;
-
-    print(addressBloc.addresses);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark.copyWith(
@@ -719,7 +918,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                               ],
                             )
                         ),
-                      if (addingNewPoint)
+                      if (addingNewPoint && !waypointIsOrigin)
                         Padding(
                             padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top, left: 20.0),
                             child: Row(
@@ -762,7 +961,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                               )
                           ),
                         ),
-                      if (!showUrbanServices && (snapshot.data == 'Pending' || snapshot.data == 'Finished' || snapshot.data == 'Cancelled'))
+                      if (!showUrbanServices && !addingNewPoint && (snapshot.data == 'Pending' || snapshot.data == 'Finished' || snapshot.data == 'Cancelled'))
                         SnappingSheet(
                           snappingSheetController: _sheetController,
                           lockOverflowDrag: true,
@@ -805,6 +1004,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                                               searchPlace(input);
                                             },
                                             onTap: () {
+                                              searchListIsOpen = true;
                                               _sheetController.snapToPosition(SnapPosition(positionFactor: 1));
                                             },
                                             decoration: InputDecoration(
@@ -830,7 +1030,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                                                           itemBuilder: (context, index) {
                                                             return InkWell(
                                                                 onTap: () {
-                                                                  setLocationOnMap(context, LatLng(snapshot.data[index]['location']['coordinates'][1], snapshot.data[index]['location']['coordinates'][0]));
+                                                                  _sheetController.snapToPosition(SnapPosition(positionFactor: -1.0));
                                                                   placeSelected = {
                                                                     "description": snapshot.data[index]['address_name'],
                                                                   };
@@ -840,6 +1040,13 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                                                                     "lng": snapshot.data[index]['location']['coordinates'][0]
                                                                   };
 
+                                                                  setState(() {
+                                                                    addingNewPoint = true;
+                                                                    waypointIsOrigin = true;
+                                                                    mapScaleHeight = 1.0;
+                                                                  });
+
+                                                                  mapController.animateCamera(CameraUpdate.newLatLngZoom(_center, 18.0));
                                                                 },
                                                                 child: Column(
                                                                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -908,16 +1115,15 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                                               child: InkWell(
                                                 onTap: () async {
                                                   FocusScope.of(context).unfocus();
+                                                  _sheetController.snapToPosition(SnapPosition(positionFactor: -1.0, snappingDuration: Duration(milliseconds: 400)));
                                                   setState(() {
+                                                    currentSearchedPlace = null;
                                                     placeSelected = currentPlaces[index];
+                                                    addingNewPoint = true;
+                                                    waypointIsOrigin = true;
+                                                    mapScaleHeight = 1.0;
                                                   });
-                                                  Response detailResponse = await Dio().get('$googleDetailUrl?json&place_id=${currentPlaces[index]['place_id']}&key=$googleMapsKey');
-
-                                                  currentSearchedPlace = detailResponse.data['result']['geometry']['location'];
-                                                  //final currentPosition = await getCurrentPosition();
-
-                                                  LatLng searchPosition = LatLng(currentSearchedPlace['lat'], currentSearchedPlace['lng']);
-                                                  setLocationOnMap(context, searchPosition);
+                                                  mapController.animateCamera(CameraUpdate.newLatLng(_center));
                                                 },
                                                 child: ListTile(
                                                   title: Text(currentPlaces[index]['structured_formatting']['main_text'].toString()),
@@ -1145,7 +1351,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
                                                                       mapUserLocation();
 
-                                                                      _sheetController.snapToPosition(SnapPosition(positionFactor: -1, snappingDuration: Duration(seconds: 2)));
+                                                                      _sheetController.snapToPosition(SnapPosition(positionFactor: -1.1, snappingDuration: Duration(seconds: 2)));
 
                                                                       new Timer(Duration(seconds: 2), () {
                                                                         setState(() {
@@ -1167,145 +1373,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
                                                                       _sheetController.snapToPosition(SnapPosition(positionFactor: -0.8));
 
-                                                                      setState(() {
-                                                                        lookingForPilot = true;
-                                                                        mapScaleHeight = 1.0;
-                                                                      });
-
-                                                                      await new Future.delayed(const Duration(seconds: 3), () => "1");
-
-                                                                      setState(() {
-                                                                        showUrbanServices = false;
-                                                                      });
-                                                                      final service = urbanServices.firstWhere((element) => element['selected'] == true);
-
-                                                                      final data = {
-                                                                        "service": {
-                                                                          "id": service['_id']
-                                                                        },
-                                                                        "payment_method": {
-                                                                          "id": paymentMethodSelectedBloc.paymentMethodSelect['_id']
-                                                                        },
-                                                                        "pickup": {
-                                                                          "zone": "-",
-                                                                          "address": _userCurrentPositionAddress,
-                                                                          "type": "Point",
-                                                                          "coordinates": "${_center.latitude},${_center.longitude}"
-                                                                        },
-                                                                        "destination": {
-                                                                          "zone": "-",
-                                                                          "address": placeSelected['description'],
-                                                                          "type": "Point",
-                                                                          "coordinates": "${currentSearchedPlace['lat']},${currentSearchedPlace['lng']}"
-                                                                        },
-                                                                        "stops": [],
-                                                                        "contact_form": {
-                                                                          "id": "5eeaa745189c16383c457cf9"
-                                                                        },
-                                                                        "distance_estimate": service['distance'],
-                                                                        "time_estimate": service['duration'],
-                                                                        "scheduled": scheduledRide == null ? false : true,
-                                                                        "fare": service['price'],
-                                                                      };
-
-                                                                      if (paymentMethodSelectedBloc.paymentMethodSelect['name'] == 'tarjeta') {
-                                                                        data['card'] = {
-                                                                          'id': paymentMethodSelectedBloc.paymentMethodSelect['card']
-                                                                        };
-                                                                      }
-
-                                                                      if(scheduledRide != null) {
-                                                                        data['pickup_time'] = (new DateFormat('dd/MM/yyyy HH:MM').format(scheduledRide)).toString();
-                                                                      }
-
-                                                                      if (currentWaypointLocation != null) {
-                                                                        data['stops'] = [
-                                                                          {
-                                                                            "zone": "-",
-                                                                            "address": currentWaypointAddress,
-                                                                            "type": "Point",
-                                                                            "coordinates": "${currentWaypointLocation.latitude},${currentWaypointLocation.longitude}"
-                                                                          }
-                                                                        ];
-                                                                      }
-
-                                                                      var rideResponse;
-
-                                                                      if (scheduledRide == null) {
-                                                                        rideResponse = await _api.postByPath(context, 'trips/newtrip', data);
-                                                                      } else {
-                                                                        rideResponse = await _api.postByPath(context, 'trips/newscheduledtrip', data);
-                                                                      }
-
-                                                                      final rideData = jsonDecode(rideResponse.body);
-
-                                                                      if (rideData['success'] == false) {
-                                                                        setState(() {
-                                                                          mapScaleHeight = 1.0;
-                                                                          _polyLines = {};
-                                                                          markers = {};
-                                                                          showUrbanServices = false;
-                                                                          lookingForPilot = false;
-                                                                        });
-
-
-
-                                                                        _sheetController.snapToPosition(SnapPosition(positionFactor: 0.0));
-
-                                                                        if (rideData['error']['errors'][0] == 'No se encontro ningun piloto') {
-                                                                          return setState(() {
-                                                                            noPilots = true;
-                                                                          });
-                                                                        }
-
-                                                                        setState(() {
-                                                                          _polyLines = {};
-                                                                          markers = {};
-                                                                          mapScaleHeight = 1.0;
-                                                                        });
-
-                                                                        print(rideResponse.body);
-
-                                                                        return utils.messageDialog(context, 'Viaje no confirmado', 'Hubo algún error. Inténtalo de nuevo.');
-                                                                      }
-
-                                                                      if (scheduledRide != null) {
-                                                                        setState(() {
-                                                                          lookingForPilot = false;
-                                                                          _polyLines = {};
-                                                                          markers = {};
-                                                                          mapScaleHeight = 1.0;
-                                                                          showUrbanServices = false;
-                                                                        });
-
-                                                                        rideStatusBloc.modifyRideStatus('Pending');
-                                                                        _sheetController.snapToPosition(SnapPosition(positionFactor: 0.0));
-
-                                                                        return utils.messageDialog(context, 'Solicitado', 'Se ha solicitado un viaje programado. Un piloto llegará a la hora indicada');
-                                                                      }
-
-                                                                      scheduledRide = null;
-
-
-                                                                      rideBloc.modifyRideData(rideData['data']);
-
-                                                                      rideStatusBloc.modifyRideStatus('Started');
-
-                                                                      setState(() {
-                                                                        mapScaleHeight = 1.0;
-                                                                        //_polyLines = {};
-                                                                        //markers = {};
-                                                                        showUrbanServices = false;
-                                                                        onRide = true;
-                                                                      });
-
-                                                                      rideBloc.modifyRideData(rideData['data']);
-
-                                                                      startChat(rideData['data']);
-
-                                                                      startRide(rideData['data']['_id']);
-
-                                                                      _sheetController.snapToPosition(SnapPosition(positionFactor: 0.0));
+                                                                      confirmRide(context);
                                                                     }
                                                                 ),
                                                               )
@@ -1364,6 +1432,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                                     setState(() {
                                       noPilots = false;
                                     });
+                                    mapUserLocation();
                                   })
                             ],
                           ),
@@ -1790,15 +1859,19 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                                 margin: EdgeInsets.only(right: 24.0, bottom: MediaQuery.of(context).padding.bottom + 24.0),
                                 child: defaultButton(
                                     MediaQuery.of(context).size.width * 0.5,
-                                    'Seleccionar',
+                                    waypointIsOrigin ? 'Confirmar origen' : 'Seleccionar',
                                         () async {
                                       await locationMap();
-                                      setLocationOnMap(context, LatLng(currentSearchedPlace['lat'], currentSearchedPlace['lng']), waypoint: currentWaypointLocation);
-                                      _sheetController.snapToPosition(SnapPosition(positionFactor: 0.0));
+
+                                      if (waypointIsOrigin == false) {
+                                        setLocationOnMap(context, LatLng(currentSearchedPlace['lat'], currentSearchedPlace['lng']), waypoint: currentWaypointLocation);
+                                        _sheetController.snapToPosition(SnapPosition(positionFactor: 0.0));
+                                      }
 
                                       setState(() {
                                         addingNewPoint = false;
-                                        mapScaleHeight = 0.6;
+                                        waypointIsOrigin = false;
+                                        //mapScaleHeight = 0.6;
                                       });
                                     }
                                 ),
@@ -1849,6 +1922,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                                               searchPlace(input);
                                             },
                                             onTap: () {
+                                              searchListIsOpen = true;
                                               _sheetController.snapToPosition(SnapPosition(positionFactor: 1));
                                             },
                                             decoration: InputDecoration(
@@ -1895,6 +1969,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
                                                   _sheetController.snapToPosition(SnapPosition(positionFactor: -1.0));
 
+
                                                   final Response detailResponse = await Dio().get('$googleDetailUrl?json&place_id=${currentPlaces[index]['place_id']}&key=$googleMapsKey');
 
                                                   final thisPlace = detailResponse.data['result']['geometry']['location'];
@@ -1903,6 +1978,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                                                   mapController.animateCamera(CameraUpdate.newLatLng(LatLng(thisPlace['lat'], thisPlace['lng'])));
 
                                                   //setLocationOnMap(context, searchPosition);
+
                                                 },
                                                 child: ListTile(
                                                   title: Text(currentPlaces[index]['structured_formatting']['main_text'].toString()),
@@ -1954,6 +2030,23 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       });
 
       return cService;
+  }
+
+  LatLngBounds boundsFromLatLngList(List<LatLng> list) {
+    assert(list.isNotEmpty);
+    double x0, x1, y0, y1;
+    for (LatLng latLng in list) {
+      if (x0 == null) {
+        x0 = x1 = latLng.latitude;
+        y0 = y1 = latLng.longitude;
+      } else {
+        if (latLng.latitude > x1) x1 = latLng.latitude;
+        if (latLng.latitude < x0) x0 = latLng.latitude;
+        if (latLng.longitude > y1) y1 = latLng.longitude;
+        if (latLng.longitude < y0) y0 = latLng.longitude;
+      }
+    }
+    return LatLngBounds(northeast: LatLng(x1, y1), southwest: LatLng(x0, y0));
   }
 
 }

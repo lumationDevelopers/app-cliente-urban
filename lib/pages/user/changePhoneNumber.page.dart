@@ -1,6 +1,10 @@
 import 'dart:convert';
 
+import 'package:after_init/after_init.dart';
+import 'package:back_button_interceptor/back_button_interceptor.dart';
 import 'package:client/bloc/provider.bloc.dart';
+import 'package:client/bloc/user.bloc.dart';
+import 'package:client/pages/user/paymentMethods.page.dart';
 import 'package:client/services/api.service.dart';
 import 'package:client/utils/utils.dart';
 import 'package:client/widgets/appBar.dart';
@@ -15,16 +19,17 @@ class ChangePhoneNumberPage extends StatefulWidget {
   _ChangePhoneNumberPageState createState() => _ChangePhoneNumberPageState();
 }
 
-class _ChangePhoneNumberPageState extends State<ChangePhoneNumberPage> {
+class _ChangePhoneNumberPageState extends State<ChangePhoneNumberPage> with AfterInitMixin<ChangePhoneNumberPage> {
   final _form = GlobalKey<FormState>();
 
   final _api = new Api();
   final _utils = new Utils();
 
   var phoneNumber = '';
-  var contactMeByPhone = false;
 
   bool sharePhone = true;
+
+  UserBloc bloc;
 
   Country _selectedDialogCountry = CountryPickerUtils.getCountryByPhoneCode('502');
 
@@ -59,14 +64,39 @@ class _ChangePhoneNumberPageState extends State<ChangePhoneNumberPage> {
             itemBuilder: _buildDialogItem)),
   );
 
+
+  @override
+  void didInitState() {
+    // TODO: implement didInitState
+    bloc = Provider.of(context).userBloc;
+      setState(() {
+        //phoneNumber = bloc.userInfo['phone_number'];
+        sharePhone = bloc.userInfo['share_phone'];
+      });
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    //BackButtonInterceptor.add(myInterceptor);
+  }
+
+
+  bool myInterceptor(bool stopDefaultButtonEvent, RouteInfo info) {
+    Navigator.of(context).pop();
+    return true;
+
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    //BackButtonInterceptor.remove(myInterceptor);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final bloc = Provider.of(context).userBloc;
-
-    setState(() {
-      //phoneNumber = bloc.userInfo['phone_number'];
-      sharePhone = bloc.userInfo['share_phone'];
-    });
     return Scaffold(
       appBar: urbanAppBar(context, 'Número de teléfono', false),
       body: Container(
@@ -128,10 +158,10 @@ class _ChangePhoneNumberPageState extends State<ChangePhoneNumberPage> {
                     textAlign: TextAlign.left,
                   ),
                   activeColor: Colors.black,
-                  value: contactMeByPhone,
+                  value: sharePhone,
                   onChanged: (v) {
                     setState(() {
-                      contactMeByPhone = v;
+                      sharePhone = v;
                     });
                   },
                   controlAffinity: ListTileControlAffinity.leading,
@@ -155,15 +185,11 @@ class _ChangePhoneNumberPageState extends State<ChangePhoneNumberPage> {
                         "share_phone": sharePhone
                       });
 
-                      print(response.body);
-
                       final data = jsonDecode(response.body);
                       if (data['success'] == false) {
                         _utils.closeDialog(context);
                         return _utils.messageDialog(context, 'Error', data['error']['errors'][0]);
                       }
-
-                      print(data['data']);
 
                       bloc.modifyUserData(data['data']);
 

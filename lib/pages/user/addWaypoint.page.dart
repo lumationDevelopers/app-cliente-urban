@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:back_button_interceptor/back_button_interceptor.dart';
 import 'package:client/widgets/defaultButton.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -67,7 +68,7 @@ class _AddWaypointPageState extends State<AddWaypointPage> {
   void initState() {
     // TODO: implement initState
     super.initState();
-
+    //BackButtonInterceptor.add(myInterceptor);
     getCurrentLocation();
   }
 
@@ -78,6 +79,17 @@ class _AddWaypointPageState extends State<AddWaypointPage> {
     }
   }
 
+  bool myInterceptor(bool stopDefaultButtonEvent, RouteInfo info) {
+    Navigator.of(context).pop();
+    return true;
+
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    //BackButtonInterceptor.remove(myInterceptor);
+  }
 
 
   @override

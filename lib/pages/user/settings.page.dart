@@ -1,3 +1,4 @@
+import 'package:back_button_interceptor/back_button_interceptor.dart';
 import 'package:client/bloc/address.bloc.dart';
 import 'package:client/bloc/cardSelected.bloc.dart';
 import 'package:client/bloc/cards.bloc.dart';
@@ -42,6 +43,26 @@ class _SettingsPageState extends State<SettingsPage> {
     paymentMethodSelectedBloc.modifyPaymentMethodSelected(null);
 
     Navigator.of(context).pushNamedAndRemoveUntil('auth/welcome', (_) => false);
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    //BackButtonInterceptor.add(myInterceptor);
+  }
+
+
+  bool myInterceptor(bool stopDefaultButtonEvent, RouteInfo info) {
+    Navigator.of(context).pop();
+    return true;
+
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    //BackButtonInterceptor.remove(myInterceptor);
   }
 
   @override

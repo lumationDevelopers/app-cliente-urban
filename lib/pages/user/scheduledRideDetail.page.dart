@@ -1,4 +1,5 @@
 import 'package:after_init/after_init.dart';
+import 'package:back_button_interceptor/back_button_interceptor.dart';
 import 'package:client/services/api.service.dart';
 import 'package:client/services/maps.service.dart';
 import 'package:client/utils/utils.dart';
@@ -52,6 +53,26 @@ class _ScheduledRideDetailPageState extends State<ScheduledRideDetailPage> with 
   }
 
   @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    //BackButtonInterceptor.add(myInterceptor);
+  }
+
+
+  bool myInterceptor(bool stopDefaultButtonEvent, RouteInfo info) {
+    Navigator.of(context).pop();
+    return true;
+
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    //BackButtonInterceptor.remove(myInterceptor);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final ScheduledRideDetailPageArguments args = ModalRoute.of(context).settings.arguments;
     return Scaffold(
@@ -89,7 +110,7 @@ class _ScheduledRideDetailPageState extends State<ScheduledRideDetailPage> with 
                   Image.network(mapUrl),
                   ListTile(
                           title: Container(
-                            child: Text(new DateFormat('dd/MM/yyyy HH:MM').format(DateTime.parse(args.data['created_at'])), overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 16.0)),
+                            child: Text(new DateFormat('dd/MM/yyyy HH:mm').format(DateTime.parse(args.data['request_time'])), overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 16.0)),
                           ),
                           subtitle: Text(args.data['payment_method']['display_name'], style: TextStyle(fontSize: 16.0)),
                           trailing: Container(

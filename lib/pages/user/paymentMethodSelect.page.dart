@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:after_init/after_init.dart';
+import 'package:back_button_interceptor/back_button_interceptor.dart';
 import 'package:client/bloc/cardSelected.bloc.dart';
 import 'package:client/bloc/cards.bloc.dart';
 import 'package:client/bloc/paymentMethodSelected.bloc.dart';
@@ -30,11 +31,6 @@ class _PaymentMethodSelectPageState extends State<PaymentMethodSelectPage> with 
   final _api = Api();
   final _utils = Utils();
 
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-  }
   List<Widget> getCards(List cards) {
 
     List<Widget> newPayments = [];
@@ -162,6 +158,25 @@ class _PaymentMethodSelectPageState extends State<PaymentMethodSelectPage> with 
     // TODO: implement didInitState
   }
 
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    //BackButtonInterceptor.add(myInterceptor);
+  }
+
+
+  bool myInterceptor(bool stopDefaultButtonEvent, RouteInfo info) {
+    Navigator.of(context).pop();
+    return true;
+
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    //BackButtonInterceptor.remove(myInterceptor);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -171,25 +186,35 @@ class _PaymentMethodSelectPageState extends State<PaymentMethodSelectPage> with 
     paymentMethodSelectedBloc = Provider.of(context).paymentMethodSelectedBloc;
     return Scaffold(
       appBar: urbanAppBar(context, '¿Como pagarás tu viaje?', true),
-      body: ListView(
-        children: <Widget>[
-          ...getCards(cardsBloc.cards),
-          ...getPaymentMethods(paymentMethodsBloc.paymentMethods),
-          InkWell(
-            onTap: () => Navigator.of(context).pushNamed('user/add-payment-methods'),
-            child: Container(
-              padding: EdgeInsets.all(24.0),
-              child: Column(
-                children: <Widget>[
-                  Icon(Icons.add_circle_outline, size: 50.0),
-                  Text("Agregar método de pago", style: TextStyle(fontSize: 20.0, fontFamily: 'Lato-Light'),)
-                ],
-              ),
-            ),
-          )
-        ],
-      ),
+      body: StreamBuilder(
+        stream: cardsBloc.cardsStream,
+        builder: (context, snapshot) {
+          if (snapshot.data != null) {
+            return ListView(
+              children: <Widget>[
+                ...getCards(snapshot.data),
+                ...getPaymentMethods(paymentMethodsBloc.paymentMethods),
+                InkWell(
+                  onTap: () => Navigator.of(context).pushNamed('user/add-payment-methods'),
+                  child: Container(
+                    padding: EdgeInsets.all(24.0),
+                    child: Column(
+                      children: <Widget>[
+                        Icon(Icons.add_circle_outline, size: 50.0),
+                        Text("Agregar método de pago", style: TextStyle(fontSize: 20.0, fontFamily: 'Lato-Light'),)
+                      ],
+                    ),
+                  ),
+                )
+              ],
+            );
+          } else {
+            return Text('');
+          }
+        },
+      )
     );
   }
 
 }
+

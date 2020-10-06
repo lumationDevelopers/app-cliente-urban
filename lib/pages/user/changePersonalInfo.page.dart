@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:back_button_interceptor/back_button_interceptor.dart';
 import 'package:client/bloc/provider.bloc.dart';
 import 'package:client/services/api.service.dart';
 import 'package:client/utils/utils.dart';
@@ -100,6 +101,26 @@ class _ChangePersonalInfoPageState extends State<ChangePersonalInfoPage> {
       });
     }
 
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    //BackButtonInterceptor.add(myInterceptor);
+  }
+
+
+  bool myInterceptor(bool stopDefaultButtonEvent, RouteInfo info) {
+    Navigator.of(context).pop();
+    return true;
+
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    //BackButtonInterceptor.remove(myInterceptor);
   }
 
   @override

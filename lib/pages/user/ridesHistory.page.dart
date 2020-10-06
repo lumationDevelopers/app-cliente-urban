@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:back_button_interceptor/back_button_interceptor.dart';
 import 'package:client/bloc/provider.bloc.dart';
 import 'package:client/pages/rides/ridePilotInfo.page.dart';
 import 'package:client/pages/user/ridesHistoryDetail.page.dart';
@@ -75,17 +76,30 @@ class _RidesHistoryPageState extends State<RidesHistoryPage> with AfterInitMixin
   }
 
   @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-  }
-
-  @override
   void didInitState() {
     args = ModalRoute.of(context).settings.arguments;
     getData(args.userId);
   }
 
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    //BackButtonInterceptor.add(myInterceptor);
+  }
+
+
+  bool myInterceptor(bool stopDefaultButtonEvent, RouteInfo info) {
+    Navigator.of(context).pop();
+    return true;
+
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    //BackButtonInterceptor.remove(myInterceptor);
+  }
 
   @override
   Widget build(BuildContext context) {

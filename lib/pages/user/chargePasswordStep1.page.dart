@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:back_button_interceptor/back_button_interceptor.dart';
 import 'package:client/bloc/provider.bloc.dart';
 import 'package:client/pages/user/changePasswordStep2.page.dart';
 import 'package:client/services/api.service.dart';
@@ -18,6 +19,25 @@ class _ChangePasswordStep1PageState extends State<ChangePasswordStep1Page> {
 
   var currentPassword = '';
 
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    //BackButtonInterceptor.add(myInterceptor);
+  }
+
+
+  bool myInterceptor(bool stopDefaultButtonEvent, RouteInfo info) {
+    Navigator.of(context).pop();
+    return true;
+
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    //BackButtonInterceptor.remove(myInterceptor);
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(

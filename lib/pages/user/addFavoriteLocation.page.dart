@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:back_button_interceptor/back_button_interceptor.dart';
 import 'package:client/credentials.dart';
 import 'package:client/pages/user/addFavoriteLocationInfo.page.dart';
 import 'package:client/widgets/defaultButton.dart';
@@ -95,9 +96,21 @@ class _AddFavoriteLocationPageState extends State<AddFavoriteLocationPage> {
     // TODO: implement initState
     super.initState();
 
+    //BackButtonInterceptor.add(myInterceptor);
     getCurrentLocation();
   }
 
+  bool myInterceptor(bool stopDefaultButtonEvent, RouteInfo info) {
+    Navigator.of(context).pop();
+    return true;
+
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    //BackButtonInterceptor.remove(myInterceptor);
+  }
 
 
   @override

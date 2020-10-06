@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "878323724272-nts6i042dn9krsnc5gsvtm8n8q8u1sch.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "co.lumation.urbanclient",
+            "certificate_hash": "45cfe136c7cd6d874d15688f3cfa378481002a27"
+          }
+        },
+        {
           "client_id": "878323724272-q0sniqkr820q20v7rtgnvkp6jmka43ko.apps.googleusercontent.com",
           "client_type": 3
         }
