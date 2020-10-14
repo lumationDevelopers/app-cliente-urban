@@ -83,7 +83,6 @@ class _ScheduledRideDetailPageState extends State<ScheduledRideDetailPage> with 
             Container(
               width: double.infinity,
               margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 18.0),
-              padding: EdgeInsets.all(14.0),
               decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16.0),
@@ -107,7 +106,10 @@ class _ScheduledRideDetailPageState extends State<ScheduledRideDetailPage> with 
                             child: Image.asset('assets/map-example.png'),
                           )
                         ),*/
-                  Image.network(mapUrl),
+                  ClipRRect(
+                    child: Image.network(mapUrl),
+                    borderRadius: BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
+                  ),
                   ListTile(
                           title: Container(
                             child: Text(new DateFormat('dd/MM/yyyy HH:mm').format(DateTime.parse(args.data['request_time'])), overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 16.0)),

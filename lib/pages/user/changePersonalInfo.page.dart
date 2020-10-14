@@ -37,7 +37,7 @@ class _ChangePersonalInfoPageState extends State<ChangePersonalInfoPage> {
   Future getImageFromGallery() async {
     var pickedFile;
     try {
-      pickedFile = await picker.getImage(source: ImageSource.gallery, maxWidth: 256.0, maxHeight: 256.0);
+      pickedFile = await picker.getImage(source: ImageSource.gallery);
     } catch (e){
       return 0;
     }
@@ -59,7 +59,7 @@ class _ChangePersonalInfoPageState extends State<ChangePersonalInfoPage> {
     var pickedFile;
 
     try {
-      pickedFile = await picker.getImage(source: ImageSource.camera, maxWidth: 256.0, maxHeight: 256.0);
+      pickedFile = await picker.getImage(source: ImageSource.camera);
     } catch (e) {
       return 0;
     }
@@ -82,7 +82,7 @@ class _ChangePersonalInfoPageState extends State<ChangePersonalInfoPage> {
         ],
         maxHeight: 1024,
         maxWidth: 1024,
-        compressQuality: 100,
+        compressQuality: 60,
         aspectRatio: CropAspectRatio(ratioX: 1.0, ratioY: 1.0),
         androidUiSettings: AndroidUiSettings(
             toolbarColor: Colors.black,

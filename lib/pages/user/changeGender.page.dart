@@ -63,7 +63,8 @@ class _ChangeGenderPageState extends State<ChangeGenderPage> {
                     Expanded(
                       flex: 6,
                       child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8.0),
+                        height: 51.0,
+                        padding: EdgeInsets.only(top: 12.0, left: 8.0, right: 8.0),
                         decoration: BoxDecoration(
                             border: Border.all(color: Colors.grey),
                             borderRadius: BorderRadius.only(

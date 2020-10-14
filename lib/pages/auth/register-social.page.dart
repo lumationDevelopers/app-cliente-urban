@@ -139,7 +139,8 @@ class _RegisterSocialPageState extends State<RegisterSocialPage> {
                     Expanded(
                       flex: 6,
                       child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8.0),
+                        height: 51.0,
+                        padding: EdgeInsets.only(left: 8.0, right: 8.0, top: 12.0),
                         decoration: BoxDecoration(
                             border: Border.all(color: Colors.grey),
                             borderRadius: BorderRadius.only(

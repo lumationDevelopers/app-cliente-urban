@@ -82,7 +82,6 @@ class _RidesHistoryDetailPageState extends State<RidesHistoryDetailPage> with Af
             //height: 272.0,
             width: double.infinity,
             margin: EdgeInsets.symmetric(vertical: 10.0, horizontal: 18.0),
-            padding: EdgeInsets.all(14.0),
             decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16.0),
@@ -99,7 +98,10 @@ class _RidesHistoryDetailPageState extends State<RidesHistoryDetailPage> with Af
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                Image.network(mapUrl),
+                ClipRRect(
+                  child: Image.network(mapUrl),
+                  borderRadius: BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
+                ),
                 ListTile(
                         title: Container(
                           child: Text(args.data['finished_at'] != null ? args.data['finished_at'].split('.')[0] : '', overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 16.0)),

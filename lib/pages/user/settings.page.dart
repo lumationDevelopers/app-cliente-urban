@@ -1,3 +1,5 @@
+
+
 import 'package:back_button_interceptor/back_button_interceptor.dart';
 import 'package:client/bloc/address.bloc.dart';
 import 'package:client/bloc/cardSelected.bloc.dart';
@@ -8,10 +10,14 @@ import 'package:client/bloc/provider.bloc.dart';
 import 'package:client/bloc/ride.bloc.dart';
 import 'package:client/bloc/rideStatus.bloc.dart';
 import 'package:client/bloc/user.bloc.dart';
+import 'package:client/utils/utils.dart';
 import 'package:client/widgets/appBar.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+import 'dart:io';
 
 class SettingsPage extends StatefulWidget {
   @override
@@ -28,7 +34,10 @@ class _SettingsPageState extends State<SettingsPage> {
   PaymentMethodsBloc paymentMethodsBloc;
   PaymentMethodSelectedBloc paymentMethodSelectedBloc;
 
+  final _utils = new Utils();
+
   void _logout(BuildContext context) async {
+
     final instance = await SharedPreferences.getInstance();
 
     instance.remove('user_token');
@@ -255,7 +264,64 @@ class _SettingsPageState extends State<SettingsPage> {
               )
             ),
             InkWell(
-              onTap: () => _logout(context),
+              onTap: () {
+                return Platform.isAndroid
+                    ? showDialog(
+                  context: context,
+                  builder: (_) => AlertDialog(
+                    title: Text('Atención'),
+                    content: Text('¿Deseas cerrar sesión?'),
+                    actions: <Widget>[
+                      FlatButton(
+                        child: Text(
+                          'Si',
+                          style: TextStyle(color: Theme.of(context).primaryColor),
+                        ),
+                        onPressed: () {
+                          _logout(context);
+                          Navigator.pop(context, false);
+                        },
+                      ),
+                      FlatButton(
+                        child: Text(
+                          'Cancelar',
+                          style: TextStyle(color: Theme.of(context).primaryColor),
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context, false);
+                        },
+                      ),
+                    ],
+                  ),
+                )
+                    : showCupertinoDialog(
+                    context: context,
+                    builder: (_) => CupertinoAlertDialog(
+                      title: Text('Atención'),
+                      content: Text('¿Deseas cerrar sesión?'),
+                      actions: <Widget>[
+                        CupertinoDialogAction(
+                          child: Text(
+                            'Si',
+                            style: TextStyle(color: Theme.of(context).primaryColor),
+                          ),
+                          onPressed: () {
+                            _logout(context);
+                            Navigator.pop(context, false);
+                          },
+                        ),
+                        CupertinoDialogAction(
+                          child: Text(
+                            'Cancelar',
+                            style: TextStyle(color: Theme.of(context).primaryColor),
+                          ),
+                          onPressed: () {
+                            Navigator.pop(context, false);
+                          },
+                        ),
+                      ],
+                    ));
+              },
               child: Container(
                 padding: EdgeInsets.only(top: 42.0, left: 18.0),
                 child: Text(
