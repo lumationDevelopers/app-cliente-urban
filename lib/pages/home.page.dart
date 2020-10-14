@@ -888,6 +888,33 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                           ),
                         ),
                       ),
+                      new Positioned(
+                        child: new Align(
+                            alignment: FractionalOffset.bottomRight,
+                            child: Container(
+                                decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(12.0),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.grey.withOpacity(0.2),
+                                        spreadRadius: 5,
+                                        blurRadius: 5,
+                                        offset: Offset(0, 3),
+                                      ),
+                                    ]
+                                ),
+                                padding: EdgeInsets.all(6.0),
+                                margin: EdgeInsets.only(right: 24.0, bottom: MediaQuery.of(context).padding.bottom + 206.0),
+                                child: Material(
+                                  child: InkWell(
+                                    onTap: () => mapUserLocation(),
+                                    child: Icon(Icons.near_me, size: 48.0),
+                                  ),
+                                )
+                            )
+                        ),
+                      ),
                       if (!addingNewPoint)
                         Padding(
                             padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top, left: 20.0),
@@ -1200,7 +1227,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                                                         DatePicker.showDateTimePicker(context,
                                                             showTitleActions: true,
                                                             minTime: DateTime.now(),
-                                                            maxTime: DateTime.now().add(Duration(hours: 23)),
+                                                            maxTime: DateTime.now().add(Duration(days: 7)),
                                                             onChanged: (date) {
                                                               print('change $date');
                                                             },

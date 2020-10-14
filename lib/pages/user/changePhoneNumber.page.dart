@@ -141,6 +141,7 @@ class _ChangePhoneNumberPageState extends State<ChangePhoneNumberPage> with Afte
                             phoneNumber = '';
                           });
                         },
+                        keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.all(Radius.circular(6.0))

@@ -215,7 +215,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ],
             ),
-          )
+          ),
+          Expanded(child: Image.asset('assets/logo-urban.png', scale: 5.0))
         ],
       )
     );

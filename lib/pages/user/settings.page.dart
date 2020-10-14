@@ -264,6 +264,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ),
             ),
+            Image.asset('assets/logo-urban.png', scale: 5.0)
           ],
       ),
     );
