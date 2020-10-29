@@ -75,7 +75,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   var placePositionSelected;
 
   int currentInputSearch = 2;
-  LatLng _center = LatLng(14.669364, -90.502756);
+  LatLng _center = LatLng(14.636787,-90.5134347);
   double _centerAngle = 0.00;
   double mapZoom = 16.0;
   double mapScaleHeight = 1;
@@ -128,6 +128,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       print('waypoint marker');
       _addMarker(waypoint, 'waypoint', 'assets/rides/origin-lx.png');
     }
+
+    print(directionResponse.data['routes']);
 
     return directionResponse.data["routes"][0];
   }
@@ -909,7 +911,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                                 child: Material(
                                   child: InkWell(
                                     onTap: () => mapUserLocation(),
-                                    child: Icon(Icons.near_me, size: 48.0),
+                                    child: Icon(Icons.gps_fixed, size: 40.0),
                                   ),
                                 )
                             )
@@ -1486,7 +1488,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                                         width: double.infinity,
                                         color: Colors.black,
                                         alignment: Alignment.center,
-                                        child: Text(estimatedTime == '0 mins' ? 'Esperando' : estimatedTime, style: TextStyle(color: Colors.white)),
+                                        child: Text(estimatedTime == '0 mins' ? '...' : estimatedTime, style: TextStyle(color: Colors.white)),
                                       ),
                                     ],
                                   )

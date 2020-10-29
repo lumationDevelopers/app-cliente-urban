@@ -155,7 +155,7 @@ class _ScheduledRidesPageState extends State<ScheduledRidesPage> with AfterInitM
                   Padding(padding: EdgeInsets.only(top: 42.0)),
                   Text('No tienes ningún viaje programado', style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold)),
                   Padding(padding: EdgeInsets.only(top: 12.0)),
-                  Text('Programa un viaje con anticipación en el mapa y un piloto llegará por tí el día que desees.', textAlign: TextAlign.center, style: TextStyle(fontSize: 18.0))
+                  Text('Programa un viaje con anticipación en el mapa y un piloto llegará por tí el día que desees.', textAlign: TextAlign.justify, style: TextStyle(fontSize: 18.0))
 
                 ],
               ),

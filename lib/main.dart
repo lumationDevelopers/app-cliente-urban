@@ -330,25 +330,25 @@ class _StartPageState extends State<StartPage> {
                         final userResponse = await _api.getByPath(context, 'auth/me');
 
                         if (userResponse.statusCode == 401) {
-                          return Navigator.of(context).pushReplacementNamed('auth/login');
+                          return Navigator.of(context).pushReplacementNamed('auth/welcome');
                         }
 
                         final userData = jsonDecode(userResponse.body);
 
                         if (userResponse.statusCode != 200) {
-                          return Navigator.of(context).pushReplacementNamed('auth/login');
+                          return Navigator.of(context).pushReplacementNamed('auth/welcome');
                         }
 
                         final addressResponse = await _api.getByPath(context, 'address/all/${userData['data']['user']['_id']}');
 
                         if (addressResponse.statusCode != 200) {
-                          return Navigator.of(context).pushReplacementNamed('auth/login');
+                          return Navigator.of(context).pushReplacementNamed('auth/welcome');
                         }
 
                         final cardsResponse = await _api.getByPath(context, 'cards/owncards/${userData['data']['user']['_id']}');
 
                         if (cardsResponse.statusCode != 200) {
-                          return Navigator.of(context).pushReplacementNamed('auth/login');
+                          return Navigator.of(context).pushReplacementNamed('auth/welcome');
                         }
 
                         final cardsData = jsonDecode(cardsResponse.body);
@@ -387,7 +387,7 @@ class _StartPageState extends State<StartPage> {
 
                           if (rideResponse.statusCode != 200) {
                           rideStatusBloc.modifyRideStatus('Pending');
-                          return Navigator.of(context).pushReplacementNamed('auth/login');
+                          return Navigator.of(context).pushReplacementNamed('auth/welcome');
                           }
 
                           final rideData = jsonDecode(rideResponse.body);

@@ -182,7 +182,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         border: Border(bottom: BorderSide(color: Colors.grey[300], width: 1.0))
                     ),
                     child: InkWell(
-                      onTap: () => Navigator.of(context).pushNamed('user/gender'),
+                      onTap: () => null /*Navigator.of(context).pushNamed('user/gender') */,
                       child: ListTile(
                         title: Text(
                           'Género',
@@ -205,11 +205,11 @@ class _ProfilePageState extends State<ProfilePage> {
                             }
                           },
                         ),
-                        trailing: Icon(
+                        trailing: null /*Icon(
                             Icons.keyboard_arrow_right,
                             color: Colors.grey[800],
                             size: 42.0
-                        ),
+                        ) */,
                       ),
                     )
                 ),

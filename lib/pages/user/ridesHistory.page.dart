@@ -207,7 +207,7 @@ class _RidesHistoryPageState extends State<RidesHistoryPage> with AfterInitMixin
                     Padding(padding: EdgeInsets.only(top: 42.0)),
                     Text('No tienes ningún viaje', style: TextStyle(fontSize: 22.0, fontWeight: FontWeight.bold)),
                     Padding(padding: EdgeInsets.only(top: 12.0)),
-                    Text('Empieza a utilizar los servicios que te ofrece Urban.', textAlign: TextAlign.center, style: TextStyle(fontSize: 22.0))
+                    Text('Empieza a utilizar los servicios que te ofrece Urban.', textAlign: TextAlign.justify, style: TextStyle(fontSize: 22.0))
 
                   ],
                 ),
