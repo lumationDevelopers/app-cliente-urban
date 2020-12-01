@@ -20,7 +20,7 @@ Widget defaultButton(width, String text, Function onPressed, {Color color = Colo
         color: color,
         elevation: 4,
         onPressed: onPressed,
-        child: Text(text, style: TextStyle(fontSize: 18.0, color: textColor),),
+        child: Text(text, style: TextStyle(fontSize: 17.0, color: textColor),),
       )
   );
 }

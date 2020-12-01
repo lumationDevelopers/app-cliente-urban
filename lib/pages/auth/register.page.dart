@@ -25,6 +25,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:get_ip/get_ip.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -246,6 +247,32 @@ class _RegisterPageState extends State<RegisterPage> {
 
     }*/
 
+
+  }
+
+
+  appleLogin(BuildContext context) async {
+    final result = SignInWithApple.getAppleIDCredential(
+      scopes: [
+        AppleIDAuthorizationScopes.email,
+        AppleIDAuthorizationScopes.fullName,
+      ],
+    );
+
+    result.then((credential){
+
+
+      Navigator.of(context).pushNamed('auth/register/social', arguments: RegisterSocialPageArguments('applesignup', 'applesignin',{
+        "name": credential.givenName,
+        "lastname": credential.familyName,
+        "email": credential.email,
+        "appleid": credential.userIdentifier,
+        "identity_token": credential.identityToken,
+        "authorization_code": credential.authorizationCode
+      }));
+    }).catchError((err){
+      print('inner error');
+    });
 
   }
 
@@ -684,7 +711,22 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                         child: Image.asset('assets/google-icon.png'),
                       )
-                  )
+                  ),
+                  if (Platform.isIOS)
+                    Padding(padding: EdgeInsets.only(left: 18.0)),
+                    InkWell(
+                        onTap: () => appleLogin(context),
+                        child: Container(
+                          width: 64.0,
+                          height: 64.0,
+                          padding: EdgeInsets.all(12.0),
+                          decoration: BoxDecoration(
+                              color: Colors.black,
+                              borderRadius: BorderRadius.circular(18.0)
+                          ),
+                          child: Image.asset('assets/apple-icon.png'),
+                        )
+                    )
                 ],
               ),
               Padding(padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom)),

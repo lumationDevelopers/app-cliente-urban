@@ -115,9 +115,10 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     Response directionResponse;
 
     if (waypoint != null) {
-    directionResponse = await Dio().get('https://maps.googleapis.com/maps/api/directions/json?origin=${l1.latitude},${l1.longitude}&destination=${l2.latitude},${l2.longitude}&waypoints=via:${waypoint.latitude}%2C${waypoint.longitude}&key=$googleMapsKey');
+      print('hay waypoint');
+      directionResponse = await Dio().get('https://maps.googleapis.com/maps/api/directions/json?origin=${l1.latitude},${l1.longitude}&destination=${l2.latitude},${l2.longitude}&waypoints=via:${waypoint.latitude}%2C${waypoint.longitude}&key=$googleMapsKey');
     } else {
-    directionResponse = await Dio().get('https://maps.googleapis.com/maps/api/directions/json?origin=${l1.latitude},${l1.longitude}&destination=${l2.latitude},${l2.longitude}&key=$googleMapsKey');
+      directionResponse = await Dio().get('https://maps.googleapis.com/maps/api/directions/json?origin=${l1.latitude},${l1.longitude}&destination=${l2.latitude},${l2.longitude}&key=$googleMapsKey');
     }
 
 
@@ -129,7 +130,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       _addMarker(waypoint, 'waypoint', 'assets/rides/origin-lx.png');
     }
 
-    print(directionResponse.data['routes']);
+    print(directionResponse);
 
     return directionResponse.data["routes"][0];
   }
@@ -491,7 +492,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       mapScaleHeight = 1.0;
     });
 
-    await new Future.delayed(const Duration(seconds: 3), () => "1");
+    await new Future.delayed(const Duration(seconds: 2), () => "1");
 
     setState(() {
       showUrbanServices = false;
@@ -717,6 +718,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   }
 
   bool waypointIsOrigin = false;
+  bool waypointIsDestination = false;
   List waypoints;
   String currentWaypointAddress;
   LatLng currentWaypointLocation;
@@ -737,15 +739,33 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             "location": [, ]
           });*/
           });
-        } else {
-          setState(() {
-            _userCurrentPositionAddress = searchResponse.data['results'][0]['formatted_address'];
-            _center = LatLng(mapWaypointPosition.target.latitude, mapWaypointPosition.target.longitude);
-            /*waypoints.add({
+
+          if (waypointIsDestination) {
+            setState(() {
+              placeSelected['description'] = searchResponse.data['results'][0]['formatted_address'];
+              currentSearchedPlace = {
+                "lat": mapWaypointPosition.target.latitude,
+                "lng": mapWaypointPosition.target.longitude
+              };
+              /*waypoints.add({
             "address": searchResponse.data['results'][0]['formatted_address'],
             "location": [, ]
           });*/
-          });
+            });
+            //getLocationByPlaceId();
+
+          }
+        } else {
+            setState(() {
+              _userCurrentPositionAddress = searchResponse.data['results'][0]['formatted_address'];
+              _center = LatLng(mapWaypointPosition.target.latitude, mapWaypointPosition.target.longitude);
+              /*waypoints.add({
+            "address": searchResponse.data['results'][0]['formatted_address'],
+            "location": [, ]
+          });*/
+            });
+
+
           getLocationByPlaceId();
         }
 
@@ -759,6 +779,22 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             "location": [position.target.latitude, position.target.longitude]
           });*/
           });
+
+          if (waypointIsDestination) {
+            setState(() {
+              placeSelected['description'] = "Unamed Road";
+              currentSearchedPlace = {
+                "lat": mapWaypointPosition.target.latitude,
+                "lng": mapWaypointPosition.target.longitude
+              };
+              /*waypoints.add({
+            "address": searchResponse.data['results'][0]['formatted_address'],
+            "location": [, ]
+          });*/
+            });
+            //getLocationByPlaceId();
+
+          }
         } else {
           setState(() {
             _userCurrentPositionAddress = "Unamed Road";
@@ -1071,11 +1107,12 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
                                                                   setState(() {
                                                                     addingNewPoint = true;
-                                                                    waypointIsOrigin = true;
+
+                                                                    waypointIsDestination = true;
                                                                     mapScaleHeight = 1.0;
                                                                   });
 
-                                                                  mapController.animateCamera(CameraUpdate.newLatLngZoom(_center, 18.0));
+                                                                  mapController.animateCamera(CameraUpdate.newLatLngZoom(new LatLng(currentSearchedPlace['lat'], currentSearchedPlace['lng']), 18.0));
                                                                 },
                                                                 child: Column(
                                                                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -1425,7 +1462,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                         ),
                       if (lookingForPilot)
                         Container(
-                          color: Color(0xFFfffff).withOpacity(0.8),
+                          color: Color(0xFFfffff).withOpacity(1),
                           width: double.infinity,
                           height: MediaQuery.of(context).size.height,
                           child: Column(
@@ -1434,7 +1471,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                             children: <Widget>[
                               Text('Buscando un piloto...', style: TextStyle(fontSize: 32.0, fontWeight: FontWeight.bold)),
                               Padding(padding: EdgeInsets.only(top: 32.0)),
-                              Image.asset('assets/waiting.png', scale: 2.0),
+                              Image.asset('assets/loading.gif', scale: 2.0),
                             ],
                           ),
                         ),
@@ -1888,14 +1925,25 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                                 margin: EdgeInsets.only(right: 24.0, bottom: MediaQuery.of(context).padding.bottom + 24.0),
                                 child: defaultButton(
                                     MediaQuery.of(context).size.width * 0.5,
-                                    waypointIsOrigin ? 'Confirmar origen' : 'Seleccionar',
+                                    waypointIsOrigin ? 'Confirmar origen' : waypointIsDestination ? 'Confirmar destino' : 'Seleccionar',
                                         () async {
                                       await locationMap();
+                                      if (waypointIsDestination == true) {
+                                        setState(() {
+                                          waypointIsOrigin = true;
+                                          waypointIsDestination = false;
+                                        });
+
+                                        mapController.animateCamera(CameraUpdate.newLatLngZoom(_center, 18.0));
+
+                                        return;
+                                      }
 
                                       if (waypointIsOrigin == false) {
                                         setLocationOnMap(context, LatLng(currentSearchedPlace['lat'], currentSearchedPlace['lng']), waypoint: currentWaypointLocation);
                                         _sheetController.snapToPosition(SnapPosition(positionFactor: 0.0));
                                       }
+
 
                                       setState(() {
                                         addingNewPoint = false;

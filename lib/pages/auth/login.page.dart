@@ -24,6 +24,7 @@ import 'package:client/bloc/provider.bloc.dart';
 import 'package:client/bloc/ride.bloc.dart';
 import 'package:client/bloc/rideStatus.bloc.dart';
 import 'package:client/bloc/user.bloc.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -353,6 +354,131 @@ class _LoginPageState extends State<LoginPage> {
     });
 
   }
+
+
+  appleLogin(BuildContext context) async {
+    _utils.loadingDialog(context);
+    SignInWithApple.getAppleIDCredential(
+      scopes: [
+        AppleIDAuthorizationScopes.email,
+        AppleIDAuthorizationScopes.fullName,
+      ],
+    ).then((credential) async {
+
+      String token;
+      String platform;
+
+      final response = await _auth.postByPath(context, 'applesignin', {
+        "appleid": credential.userIdentifier,
+        "identity_token": credential.identityToken,
+        "authorization_code": credential.authorizationCode
+      });
+
+      final responseData = jsonDecode(response.body);
+      print(response.statusCode);
+      print(response.body);
+
+      if (response.statusCode != 201) {
+        _utils.closeDialog(context);
+        return _utils.messageDialog(context, 'No se ha realizado el registro', responseData['error']['errors'][0]);
+      }
+
+      final instance = await SharedPreferences.getInstance();
+
+      instance.setString('user_token', responseData['access_token']);
+
+      final userResponse = await _api.getByPath(context, 'auth/me');
+
+      print(userResponse.body);
+      if (userResponse.statusCode != 200) {
+        _utils.closeDialog(context);
+        return _utils.messageDialog(context, 'No se inicio sesión', 'Hubo algún error en el servidor. Inténtalo de nuevo' );
+
+      }
+
+      final userData = jsonDecode(userResponse.body);
+
+      final cardsResponse = await _api.getByPath(context, 'cards/owncards/${userData['data']['user']['_id']}');
+
+      if (cardsResponse.statusCode != 200) {
+        _utils.closeDialog(context);
+        return _utils.messageDialog(context, 'No se inicio sesión', 'Hubo algún error en el servidor. Inténtalo de nuevo' );
+      }
+
+      final cardsData = jsonDecode(cardsResponse.body);
+
+      final addressResponse = await _api.getByPath(context, 'address/all/${userData['data']['user']['_id']}');
+
+      if (addressResponse.statusCode != 200) {
+        _utils.closeDialog(context);
+        return _utils.messageDialog(context, 'No se inicio sesión', 'Hubo algún error en el servidor. Inténtalo de nuevo' );
+      }
+
+      final addressData = jsonDecode(addressResponse.body);
+
+      cardsBloc.modifyCards(cardsData['data']);
+      addressBloc.modifyAddresses(addressData['data']);
+      bloc.modifyUserData(userData['data']['user']);
+
+      final paymentsResponse = await _api.getByPath(context, 'paymentmethods');
+
+      final paymentsData = jsonDecode(paymentsResponse.body);
+      if (paymentsResponse.statusCode == 200) {
+        paymentMethodsBloc.modifyPaymentMethods(paymentsData['data']);
+      } else {
+        paymentMethodsBloc.modifyPaymentMethods([]);
+      }
+
+      print(paymentsData);
+      if (cardsData['data'].length > 0) {
+        paymentMethodSelectedBloc.modifyPaymentMethodSelected({
+          ...(paymentsData['data'] as List).firstWhere((element) => element['name'] == 'tarjeta'),
+          "card": cardsData['data'][0]['_id'],
+          "last4": cardsData['data'][0]['last4'],
+        });
+      } else {
+        paymentMethodSelectedBloc.modifyPaymentMethodSelected({
+          ...(paymentsData['data'] as List).firstWhere((element) => element['name'] == 'efectivo'),
+        });
+      }
+
+      if (userData['data']['user']['current_trip'] != null) {
+
+        final rideResponse = await _api.getByPath(context, 'trips/${userData['data']['user']['current_trip']}');
+
+        if (rideResponse.statusCode != 200) {
+          rideStatusBloc.modifyRideStatus('Pending');
+          _utils.closeDialog(context);
+          return _utils.messageDialog(context, 'No se inicio sesión', 'Hubo algún error en el servidor. Inténtalo de nuevo' );
+        }
+
+        final rideData = jsonDecode(rideResponse.body);
+
+        rideBloc.modifyRideData(rideData['data']);
+
+        rideStatusBloc.modifyRideStatus('Started');
+      } else {
+        rideStatusBloc.modifyRideStatus('Pending');
+      }
+
+      initPlatformState(userData['data']['user']['email']).then((playerId) {
+        _api.putByPath(context, 'users/addplayerid', {
+          "playerid": playerId
+        });
+      });
+
+      _utils.closeDialog(context);
+      Navigator.of(context).pushNamedAndRemoveUntil('/home', (_) => false);
+
+      print(responseData);
+
+    }).catchError((onError) {
+      _utils.closeDialog(context);
+      _utils.messageDialog(context, 'Error', 'Hubo un error al conectar con los servicios de Google. Inténtalo de nuevo');
+    });
+
+  }
+
   @override
   Widget build(BuildContext context) {
     bloc = Provider.of(context).userBloc;
@@ -576,7 +702,22 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         child: Image.asset('assets/google-icon.png'),
                       )
-                  )
+                  ),
+                  if (Platform.isIOS)
+                    Padding(padding: EdgeInsets.only(left: 18.0)),
+                    InkWell(
+                        onTap: () => appleLogin(context),
+                        child: Container(
+                          width: 64.0,
+                          height: 64.0,
+                          padding: EdgeInsets.all(12.0),
+                          decoration: BoxDecoration(
+                              color: Colors.black,
+                              borderRadius: BorderRadius.circular(18.0)
+                          ),
+                          child: Image.asset('assets/apple-icon.png'),
+                        )
+                    )
                 ],
               ),
               Padding(padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom)),
