@@ -474,7 +474,7 @@ class _LoginPageState extends State<LoginPage> {
 
     }).catchError((onError) {
       _utils.closeDialog(context);
-      _utils.messageDialog(context, 'Error', 'Hubo un error al conectar con los servicios de Google. Inténtalo de nuevo');
+      _utils.messageDialog(context, 'No se inicio sesión', 'No se pudo iniciar sesión. Inténtalo de nuevo');
     });
 
   }
