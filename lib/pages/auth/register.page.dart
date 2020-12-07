@@ -30,6 +30,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
+import 'package:onesignal_flutter/onesignal_flutter.dart';
+
 class RegisterPage extends StatefulWidget {
   @override
   _RegisterPageState createState() => _RegisterPageState();
@@ -51,6 +53,8 @@ class _RegisterPageState extends State<RegisterPage> {
   var username;
   var birthday;
 
+  var _debugLabelString;
+
   final FocusNode _firstNameFocus = FocusNode();
   final FocusNode _lastNameFocus = FocusNode();
   final FocusNode _phoneNumberFocus = FocusNode();
@@ -63,6 +67,58 @@ class _RegisterPageState extends State<RegisterPage> {
 
   Country _selectedDialogCountry = CountryPickerUtils.getCountryByPhoneCode('502');
 
+  Future initPlatformState(userEmail) async {
+    if (!mounted) return;
+
+    await OneSignal.shared.setLogLevel(OSLogLevel.verbose, OSLogLevel.none);
+
+    await OneSignal.shared.setRequiresUserPrivacyConsent(false);
+
+    var settings = {
+      OSiOSSettings.autoPrompt: true,
+      OSiOSSettings.promptBeforeOpeningPushUrl: true,
+      OSiOSSettings.inAppLaunchUrl: false
+    };
+
+    OneSignal.shared.setNotificationReceivedHandler((OSNotification notification) {
+      this.setState(() {
+        _debugLabelString =
+        "Received notification: \n${notification.jsonRepresentation().replaceAll("\\n", "\n")}";
+      });
+    });
+
+    OneSignal.shared
+        .setNotificationOpenedHandler((OSNotificationOpenedResult result) {
+      this.setState(() {
+        _debugLabelString =
+        "Opened notification: \n${result.notification.jsonRepresentation().replaceAll("\\n", "\n")}";
+      });
+    });
+
+    OneSignal.shared
+        .setInAppMessageClickedHandler((OSInAppMessageAction action) {
+      this.setState(() {
+        _debugLabelString =
+        "In App Message Clicked: \n${action.jsonRepresentation().replaceAll("\\n", "\n")}";
+      });
+    });
+
+    await OneSignal.shared.init("d8d7f226-00d2-41ab-84c4-4bdf12b30c6d", iOSSettings: settings);
+
+    await OneSignal.shared.setInFocusDisplayType(OSNotificationDisplayType.notification);
+
+    //await OneSignal.shared.setEmail(email: userEmail);
+
+    final status = await OneSignal.shared.getPermissionSubscriptionState();
+    String oneSignalUserId = status.subscriptionStatus.userId;
+
+    final email = status.emailSubscriptionStatus.emailUserId;
+    print(oneSignalUserId);
+    print(email);
+
+    return oneSignalUserId;
+
+  }
 
   Widget _buildDialogItem(Country country) => Row(
     mainAxisAlignment: MainAxisAlignment.start,
@@ -259,17 +315,145 @@ class _RegisterPageState extends State<RegisterPage> {
       ],
     );
 
-    result.then((credential){
+    result.then((credential) async {
 
 
-      Navigator.of(context).pushNamed('auth/register/social', arguments: RegisterSocialPageArguments('applesignup', 'applesignin',{
+      /*Navigator.of(context).pushNamed('auth/register/social', arguments: RegisterSocialPageArguments('applesignup', 'applesignin',{
         "name": credential.givenName,
         "lastname": credential.familyName,
         "email": credential.email,
         "appleid": credential.userIdentifier,
         "identity_token": credential.identityToken,
         "authorization_code": credential.authorizationCode
-      }));
+      }));*/
+
+
+      //CREATE ACCOUNT WITHOUT CONFIRM PERSONAL INFO
+
+      final data = {
+        "name": credential.givenName,
+        "lastname": credential.familyName,
+        "email": credential.email,
+        "appleid": credential.userIdentifier,
+        "identity_token": credential.identityToken,
+        "authorization_code": credential.authorizationCode
+      };
+
+      final response = await _auth.postByPath(context, 'applesignup', {
+        ...data,
+        "username": '${credential.givenName}${credential.familyName}_${credential.userIdentifier}',
+        "gender": 'm'
+      });
+
+      final responseData = jsonDecode(response.body);
+      if (response.statusCode != 201) {
+        _utils.closeDialog(context);
+        if (response.statusCode == 422) {
+          return _utils.messageDialog(context, 'No se ha realizado el registro', responseData['error']['errors'][0]);
+        } else {
+          print(response.statusCode);
+          print(response.body);
+          return _utils.messageDialog(context, 'No se ha realizado el registro', 'Ocurrio un error.');
+        }
+
+      }
+
+      final loginResponse = await _auth.postByPath(context, 'applesignin', {
+        ...data,
+      });
+
+      if (loginResponse.statusCode != 201) {
+        _utils.closeDialog(context);
+        Navigator.of(context).pushNamedAndRemoveUntil('auth/welcome', (_) => false);
+        return _utils.messageDialog(context, 'Registrado', 'Tu registro fue exitoso pero no se ha iniciado sesión. Inténta iniciar sesión de nuevo.');
+      }
+
+      final loginData = jsonDecode(loginResponse.body);
+
+      final instance = await SharedPreferences.getInstance();
+
+      instance.setString('user_token', loginData['access_token']);
+
+      final userResponse = await _api.getByPath(context, 'auth/me');
+
+      if (userResponse.statusCode != 200) {
+        _utils.closeDialog(context);
+        Navigator.of(context).pushNamedAndRemoveUntil('auth/welcome', (_) => false);
+        return _utils.messageDialog(context, 'Usuario creado', 'Se ha creado tu usuarios. Ahora debes iniciar sesión');
+      }
+
+      final userData = jsonDecode(userResponse.body);
+
+      final cardsResponse = await _api.getByPath(context, 'cards');
+
+      if (cardsResponse.statusCode != 200) {
+        _utils.closeDialog(context);
+        _utils.messageDialog(context, 'Usuario creado', 'Se ha creado tu usuarios. Ahora debes iniciar sesión');
+      }
+
+      final cardsData = jsonDecode(cardsResponse.body);
+
+      final addressResponse = await _api.getByPath(context, 'address/all/${userData['data']['user']['_id']}');
+
+      if (addressResponse.statusCode != 200) {
+        _utils.closeDialog(context);
+        _utils.messageDialog(context, 'Usuario creado', 'Se ha creado tu usuarios. Ahora debes iniciar sesión');
+      }
+
+      final addressData = jsonDecode(addressResponse.body);
+
+      cardsBloc.modifyCards(cardsData['data']);
+      addressBloc.modifyAddresses(addressData['data']);
+      bloc.modifyUserData(userData['data']['user']);
+
+      final paymentsResponse = await _api.getByPath(context, 'paymentmethods');
+
+      final paymentsData = jsonDecode(paymentsResponse.body);
+      if (paymentsResponse.statusCode == 200) {
+        paymentMethodsBloc.modifyPaymentMethods(paymentsData['data']);
+      } else {
+        paymentMethodsBloc.modifyPaymentMethods([]);
+      }
+
+      print(paymentsData);
+      if (cardsData['data'].length > 0) {
+        paymentMethodSelectedBloc.modifyPaymentMethodSelected({
+          ...(paymentsData['data'] as List).firstWhere((element) => element['_id'] == '5f188197ebddcb29eccc5eb5'),
+          "card": cardsData['data'][0]['_id'],
+          "last4": cardsData['data'][0]['last4'],
+        });
+      } else {
+        paymentMethodSelectedBloc.modifyPaymentMethodSelected({
+          ...(paymentsData['data'] as List).firstWhere((element) => element['_id'] == '5f188138ebddcb29eccc5eb4'),
+        });
+      }
+
+      if (userData['data']['user']['current_trip'] != null) {
+
+        final rideResponse = await _api.getByPath(context, 'trips/${userData['data']['user']['current_trip']}');
+
+        if (rideResponse.statusCode != 200) {
+          rideStatusBloc.modifyRideStatus('Pending');
+          return Navigator.of(context).pushReplacementNamed('auth/login');
+        }
+
+        final rideData = jsonDecode(rideResponse.body);
+
+        rideBloc.modifyRideData(rideData['data']);
+
+        rideStatusBloc.modifyRideStatus('Started');
+      } else {
+        rideStatusBloc.modifyRideStatus('Pending');
+      }
+
+      initPlatformState(userData['data']['user']['email']);
+
+      _utils.closeDialog(context);
+      Navigator.of(context).pushNamedAndRemoveUntil('/home', (_) => false);
+
+      //END CREATE ACCOUNT WITHOUT CONFIRM PERSONAL INFO
+
+
     }).catchError((err){
       print('inner error');
     });
@@ -425,7 +609,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           )
                       ),
                       child:  DropdownButtonFormField<String>(
-                        validator: (v) => v == '' ? 'Este campo es obligatorio' : null,
                         onChanged: (v) => gender = v,
                         isExpanded: true,
                         icon: null,
@@ -497,7 +680,7 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
               Padding(padding: EdgeInsets.only(top: 16.0)),
               DateTimeFormField(
-                validator: (v) => v == null ? 'Este campo es obligatorio' : null,
+                //validator: (v) => v == null ? 'Este campo es obligatorio' : null,
                 mode: DateFieldPickerMode.date,
                 label: 'Fecha de nacimiento',
                 decoration: InputDecoration(
@@ -581,6 +764,8 @@ class _RegisterPageState extends State<RegisterPage> {
 
                     _utils.loadingDialog(context);
 
+
+                    print((DateTime.now().subtract(Duration(days: 6570)).toString()).split(' ')[0]);
                     final data = {
                       "terms_conditions_of_use": true,
                       "username": username,
@@ -591,8 +776,8 @@ class _RegisterPageState extends State<RegisterPage> {
                       "confirm_password": password,
                       "phone_number": '+${_selectedDialogCountry.phoneCode}$phoneNumber',
                       "whatsapp_number": phoneNumber,
-                      "birthday": (birthday.toString()).split(' ')[0],
-                      "gender": gender,
+                      "birthday": birthday != null ? (birthday.toString()).split(' ')[0] : (DateTime.now().subtract(Duration(days: 6570)).toString()).split(' ')[0],
+                      "gender": gender != null ? gender : 'm',
                       "share_phone": sharePhone
                     };
                     
