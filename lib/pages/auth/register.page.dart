@@ -342,7 +342,6 @@ class _RegisterPageState extends State<RegisterPage> {
       final response = await _auth.postByPath(context, 'applesignup', {
         ...data,
         "username": '${credential.givenName}${credential.familyName}_${credential.userIdentifier}',
-        "gender": 'm'
       });
 
       final responseData = jsonDecode(response.body);
