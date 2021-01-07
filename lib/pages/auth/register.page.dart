@@ -342,7 +342,6 @@ class _RegisterPageState extends State<RegisterPage> {
       final response = await _auth.postByPath(context, 'applesignup', {
         ...data,
         "username": '${credential.givenName}${credential.familyName}_${credential.userIdentifier}',
-        "gender": 'm'
       });
 
       final responseData = jsonDecode(response.body);
@@ -404,7 +403,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
       cardsBloc.modifyCards(cardsData['data']);
       addressBloc.modifyAddresses(addressData['data']);
-      bloc.modifyUserData(userData['data']['user']);
+      bloc.modifyUserData({...userData['data']['user'], 'request_gender': true});
 
       final paymentsResponse = await _api.getByPath(context, 'paymentmethods');
 

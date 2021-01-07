@@ -39,6 +39,12 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin, AfterInitMixin<HomePage> {
+  final _formGender = GlobalKey<FormState>();
+  var _requestedGender;
+  bool requestGender = false;
+
+  final Utils _utils = new Utils();
+
   Timer _getInfoTimer;
 
   double _driverRating = 0;
@@ -832,6 +838,12 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
   getUserInfo({ bool connectToSockets = true}) async {
     final userResponse = await _api.getByPath(context, 'auth/me');
+
+    if ((bloc.userInfo['request_gender'] != null && bloc.userInfo['request_gender'] == true) || bloc.userInfo['gender'] == null) {
+      setState(() {
+        requestGender = true;
+      });
+    }
 
     if (userResponse.statusCode == 401) {
       return Navigator.of(context).pushReplacementNamed('auth/login');
@@ -2071,6 +2083,75 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                             ),
                           ),
                         ),
+                      if (requestGender)
+                        Container(
+                          width: double.infinity,
+                          height: MediaQuery.of(context).size.height,
+                          color: Colors.white,
+                          padding: EdgeInsets.all(24.0),
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text('Ingresa tu género', style: TextStyle(color: Colors.black, fontSize: 28.0, fontWeight: FontWeight.bold),),
+                                Padding(padding: EdgeInsets.only(top: 24.0),),
+                                Text('Urban ofrece servicios personalizados según tu genero, indicanos tu género para mejorar tu experiencia.', textAlign: TextAlign.center,),
+                                Padding(padding: EdgeInsets.only(top: 46.0),),
+                                Form(
+                                  key: _formGender,
+                                  child: Column(
+                                      children: [
+                                        DropdownButtonFormField<String>(
+                                          validator: (v) => v == null ? 'Este campo es obligatorio' : null,
+                                          onChanged: (v) => _requestedGender = v,
+                                          isExpanded: true,
+                                          icon: null,
+                                          iconSize: 0,
+                                          items: <String>['Masculino', 'Femenino'].map((String value) {
+                                            return new DropdownMenuItem<String>(
+                                              value: value == 'Femenino' ? 'f' : 'm',
+                                              child: new Text(value),
+                                            );
+                                          }).toList(),
+                                          hint: Text('Selecciona tu género'),
+                                          decoration: InputDecoration.collapsed(hintText: null),
+                                        ),
+                                        Padding(padding: EdgeInsets.only(top: 46.0),),
+                                        defaultButton(double.infinity, 'Continuar', () async {
+                                          if (_formGender.currentState.validate()) {
+                                            _formGender.currentState.save();
+
+                                            _utils.loadingDialog(context);
+
+                                            final response = await _api.putByPath(context, 'users/${bloc.userInfo['_id']}', {
+                                              "gender": _requestedGender
+                                            });
+
+                                            final data = jsonDecode(response.body);
+                                            if (data['success'] == false) {
+                                              _utils.closeDialog(context);
+                                              return _utils.messageDialog(context, 'Error', data['error']['errors'][0]);
+                                            }
+
+                                            print(data['data']);
+
+                                            bloc.modifyUserData(data['data']);
+
+                                            _utils.closeDialog(context);
+
+                                            setState(() {
+                                              requestGender = false;
+                                            });
+                                          }
+                                        })
+                                      ],
+                                    ),
+
+                                )
+
+                              ],
+                          ),
+                        )
                     ],
                   );
                 } else {
