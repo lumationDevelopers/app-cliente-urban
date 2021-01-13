@@ -192,10 +192,15 @@ class _RegisterSocialPageState extends State<RegisterSocialPage> {
                     if (_form.currentState.validate()) {
                       _form.currentState.save();
 
+
+                      args.data['username'] = username;
+                      if (gender != null && gender != ''){
+                        args.data['gender'] = gender;
+                      }else{
+                      }
+
                       final response = await _auth.postByPath(context, args.path, {
                         ...args.data,
-                        "username": username,
-                        "gender": gender
                       });
 
                       final responseData = jsonDecode(response.body);

@@ -2101,20 +2101,29 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                                   key: _formGender,
                                   child: Column(
                                       children: [
-                                        DropdownButtonFormField<String>(
-                                          validator: (v) => v == null ? 'Este campo es obligatorio' : null,
-                                          onChanged: (v) => _requestedGender = v,
-                                          isExpanded: true,
-                                          icon: null,
-                                          iconSize: 0,
-                                          items: <String>['Masculino', 'Femenino'].map((String value) {
-                                            return new DropdownMenuItem<String>(
-                                              value: value == 'Femenino' ? 'f' : 'm',
-                                              child: new Text(value),
-                                            );
-                                          }).toList(),
-                                          hint: Text('Selecciona tu género'),
-                                          decoration: InputDecoration.collapsed(hintText: null),
+                                        Container(
+                                          alignment: Alignment.center,
+                                          padding: EdgeInsets.all(8),
+                                          height:60,
+                                          decoration:BoxDecoration(
+                                            borderRadius: BorderRadius.circular(6),
+                                            border: Border.all(color: Colors.grey)
+                                          ),
+                                          child: DropdownButtonFormField<String>(
+                                            validator: (v) => v == null ? 'Este campo es obligatorio' : null,
+                                            onChanged: (v) => _requestedGender = v,
+                                            isExpanded: true,
+                                            icon: null,
+                                            iconSize: 0,
+                                            items: <String>['Masculino', 'Femenino'].map((String value) {
+                                              return new DropdownMenuItem<String>(
+                                                value: value == 'Femenino' ? 'f' : 'm',
+                                                child: new Text(value),
+                                              );
+                                            }).toList(),
+                                            hint: Text('Selecciona tu género'),
+                                            decoration: InputDecoration.collapsed(hintText: null),
+                                          ),
                                         ),
                                         Padding(padding: EdgeInsets.only(top: 46.0),),
                                         defaultButton(double.infinity, 'Continuar', () async {
@@ -2133,7 +2142,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                                               return _utils.messageDialog(context, 'Error', data['error']['errors'][0]);
                                             }
 
-                                            print(data['data']);
+
 
                                             bloc.modifyUserData(data['data']);
 

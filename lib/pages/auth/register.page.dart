@@ -478,230 +478,133 @@ class _RegisterPageState extends State<RegisterPage> {
 
     return Scaffold(
       appBar: urbanAppBar(context, 'Regístrate', false),
-      body: Container(
-        child: Form(
-          key: _registerForm,
-          child: ListView(
-            padding: EdgeInsets.all(26.0),
-            children: <Widget>[
-              TextFormField(
-                textInputAction: TextInputAction.next,
-                focusNode: _usernameFocus,
-                onFieldSubmitted: (term){
-                  _fieldFocusChange(context, _usernameFocus, _firstNameFocus);
-                },
-                validator: (v) => v == '' ? 'Este campo es obligatorio' : null,
-                onChanged: (v) => username = v,
-                decoration: InputDecoration(
-                    labelText: 'Nombre de usuario'
-                ),
-              ),
-              Padding(padding: EdgeInsets.only(top: 16.0)),
-              Row(
-                children: <Widget>[
-                  Expanded(
-                    flex: 8,
-                    child: TextFormField(
-                      textInputAction: TextInputAction.next,
-                      focusNode: _firstNameFocus,
-                      onFieldSubmitted: (term){
-                        _fieldFocusChange(context, _firstNameFocus, _lastNameFocus);
-                      },
-                      validator: (v) => v == '' ? 'Este campo es obligatorio' : null,
-                      onChanged: (v) => firstName = v,
-                      decoration: InputDecoration(
-                          labelText: 'Nombre'
-                      ),
-                    ),
+      body: GestureDetector(
+        onTap: (){
+          FocusScope.of(context).unfocus();
+        },
+        child: Container(
+          child: Form(
+            key: _registerForm,
+            child: ListView(
+              padding: EdgeInsets.all(26.0),
+              children: <Widget>[
+                TextFormField(
+                  textInputAction: TextInputAction.next,
+                  focusNode: _usernameFocus,
+                  onFieldSubmitted: (term){
+                    _fieldFocusChange(context, _usernameFocus, _firstNameFocus);
+                  },
+                  validator: (v) => v == '' ? 'Este campo es obligatorio' : null,
+                  onChanged: (v) => username = v,
+                  decoration: InputDecoration(
+                      labelText: 'Nombre de usuario'
                   ),
-                  Spacer(),
-                  Expanded(
-                    flex: 8,
-                    child: TextFormField(
-                      textInputAction: TextInputAction.next,
-                      focusNode: _lastNameFocus,
-                      onFieldSubmitted: (term){
-                        _fieldFocusChange(context, _lastNameFocus, _phoneNumberFocus);
-                      },
-                      validator: (v) => v == '' ? 'Este campo es obligatorio' : null,
-                      onChanged: (v) => lastName = v,
-                      decoration: InputDecoration(
-                          labelText: 'Apellido'
-                      ),
-                    ),
-                  )
-                ],
-              ),
-              Padding(padding: EdgeInsets.only(top: 16.0)),
-              Container(
-                height: 56.0,
-                padding: EdgeInsets.all(0),
-                decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.all(Radius.circular(8.0)),
                 ),
-                child: ListTile(
-                  onTap: _openCountryPickerDialog,
-                  title: _buildDialogItem(_selectedDialogCountry),
-                ),
-              ),
-              Padding(padding: EdgeInsets.only(top: 16.0)),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Expanded(
-                    child: TextFormField(
-                      textInputAction: TextInputAction.done,
-                      focusNode: _phoneNumberFocus,
-                      onFieldSubmitted: (term){
-                        _phoneNumberFocus.unfocus();
-                      },
-                      validator: (v) {
-                        if (v == '') {
-                          return 'Este campo es obligatorio';
-                        }
-                        if (v.length < 8) {
-                          return 'Ingresa un número válido';
-                        }
-                        return null;
-                      },
-                      keyboardType: TextInputType.number,
-                      onChanged: (v) => phoneNumber = v,
-                      decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                Padding(padding: EdgeInsets.only(top: 16.0)),
+                Row(
+                  children: <Widget>[
+                    Expanded(
+                      flex: 8,
+                      child: TextFormField(
+                        textInputAction: TextInputAction.next,
+                        focusNode: _firstNameFocus,
+                        onFieldSubmitted: (term){
+                          _fieldFocusChange(context, _firstNameFocus, _lastNameFocus);
+                        },
+                        validator: (v) => v == '' ? 'Este campo es obligatorio' : null,
+                        onChanged: (v) => firstName = v,
+                        decoration: InputDecoration(
+                            labelText: 'Nombre'
                         ),
-                        labelText: 'Número de teléfono',
                       ),
                     ),
-                  )
-                ],
-              ),
-              CheckboxListTile(
-                title: Text(
-                  "El piloto puede contactarme por esta via.",
-                  style: TextStyle(color: Colors.grey, fontSize: 14.0),
-                  textAlign: TextAlign.left,
-                ),
-                value: sharePhone,
-                activeColor: Colors.black,
-                onChanged: (v) {
-                  setState(() {
-                    sharePhone = v;
-                  });
-                },
-                controlAffinity: ListTileControlAffinity.leading,
-              ),
-              Row(
-                children: <Widget>[
-                  Expanded(
-                    flex: 6,
-                    child: Container(
-                      height: 51.0,
-                      padding: EdgeInsets.only(left: 8.0, right: 8.0, top: 12.0),
-                      decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey),
-                          borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(6.0),
-                              bottomLeft: Radius.circular(6.0)
-                          )
-                      ),
-                      child:  DropdownButtonFormField<String>(
-                        onChanged: (v) => gender = v,
-                        isExpanded: true,
-                        icon: null,
-                        iconSize: 0,
-                        items: <String>['Masculino', 'Femenino'].map((String value) {
-                          return new DropdownMenuItem<String>(
-                            value: value == 'Femenino' ? 'f' : 'm',
-                            child: new Text(value),
-                          );
-                        }).toList(),
-                        hint: Text('Género'),
-                        decoration: InputDecoration.collapsed(hintText: null),
-
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 1,
-                    child: Container(
-                        height: 51.0,
-                        decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey),
-                            borderRadius: BorderRadius.only(
-                                topRight: Radius.circular(6.0),
-                                bottomRight: Radius.circular(6.0)
-                            )
+                    Spacer(),
+                    Expanded(
+                      flex: 8,
+                      child: TextFormField(
+                        textInputAction: TextInputAction.next,
+                        focusNode: _lastNameFocus,
+                        onFieldSubmitted: (term){
+                          _fieldFocusChange(context, _lastNameFocus, _phoneNumberFocus);
+                        },
+                        validator: (v) => v == '' ? 'Este campo es obligatorio' : null,
+                        onChanged: (v) => lastName = v,
+                        decoration: InputDecoration(
+                            labelText: 'Apellido'
                         ),
-                        child: Icon(Icons.arrow_drop_down, size: 42.0)
-                    ),
+                      ),
+                    )
+                  ],
+                ),
+                Padding(padding: EdgeInsets.only(top: 16.0)),
+                Container(
+                  height: 56.0,
+                  padding: EdgeInsets.all(0),
+                  decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.all(Radius.circular(8.0)),
                   ),
-                ],
-              ),
-              Padding(padding: EdgeInsets.only(top: 16.0)),
-              TextFormField(
-                textInputAction: TextInputAction.next,
-                focusNode: _emailFocus,
-                onFieldSubmitted: (term){
-                  _fieldFocusChange(context, _emailFocus, _passwordFocus);
-                },
-                validator: (v) {
-                  final RegExp validator = RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+");
-                  if (v == '') {
-                    return 'Este campo es obligatorio';
-                  }
-                  if (!validator.hasMatch(v)) {
-                    return 'Ingresa un correo electrónico válido';
-                  }
-                  return null;
-                },
-                onChanged: (v) => email = v,
-                keyboardType: TextInputType.emailAddress,
-                decoration: InputDecoration(
-                    labelText: 'Correo electrónico'
+                  child: ListTile(
+                    onTap: _openCountryPickerDialog,
+                    title: _buildDialogItem(_selectedDialogCountry),
+                  ),
                 ),
-              ),
-              Padding(padding: EdgeInsets.only(top: 16.0)),
-              TextFormField(
-                textInputAction: TextInputAction.done,
-                focusNode: _passwordFocus,
-                onFieldSubmitted: (term){
-                  _passwordFocus.unfocus();
-                },
-                validator: (v) => v == '' ? 'Este campo es obligatorio' : null,
-                onChanged: (v) => password = v,
-                obscureText: true,
-                decoration: InputDecoration(
-                    labelText: 'Contraseña'
+                Padding(padding: EdgeInsets.only(top: 16.0)),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Expanded(
+                      child: TextFormField(
+                        textInputAction: TextInputAction.done,
+                        focusNode: _phoneNumberFocus,
+                        onFieldSubmitted: (term){
+                          _phoneNumberFocus.unfocus();
+                        },
+                        validator: (v) {
+                          if (v == '') {
+                            return 'Este campo es obligatorio';
+                          }
+                          if (v.length < 8) {
+                            return 'Ingresa un número válido';
+                          }
+                          return null;
+                        },
+                        keyboardType: TextInputType.number,
+                        onChanged: (v) => phoneNumber = v,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                          ),
+                          labelText: 'Número de teléfono',
+                        ),
+                      ),
+                    )
+                  ],
                 ),
-              ),
-              Padding(padding: EdgeInsets.only(top: 16.0)),
-              DateTimeFormField(
-                //validator: (v) => v == null ? 'Este campo es obligatorio' : null,
-                mode: DateFieldPickerMode.date,
-                label: 'Fecha de nacimiento',
-                decoration: InputDecoration(
-                  prefixText: ''
+                CheckboxListTile(
+                  title: Text(
+                    "El piloto puede contactarme por esta via.",
+                    style: TextStyle(color: Colors.grey, fontSize: 14.0),
+                    textAlign: TextAlign.left,
+                  ),
+                  value: sharePhone,
+                  activeColor: Colors.black,
+                  onChanged: (v) {
+                    setState(() {
+                      sharePhone = v;
+                    });
+                  },
+                  controlAffinity: ListTileControlAffinity.leading,
                 ),
-                onDateSelected: (DateTime date) {
-                  setState(() {
-                    birthday = date;
-                  });
-                },
-                lastDate: DateTime(2021),
-              ),
-              Padding(padding: EdgeInsets.only(top: 16.0)),
-              /*InkWell(
-                onTap: () => Navigator.of(context).pushNamed('auth/register/card'),
-                child: Row(
+                if(!Platform.isIOS)
+                Row(
                   children: <Widget>[
                     Expanded(
                       flex: 6,
                       child: Container(
                         height: 51.0,
-                        padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0),
+                        padding: EdgeInsets.only(left: 8.0, right: 8.0, top: 12.0),
                         decoration: BoxDecoration(
                             border: Border.all(color: Colors.grey),
                             borderRadius: BorderRadius.only(
@@ -709,11 +612,26 @@ class _RegisterPageState extends State<RegisterPage> {
                                 bottomLeft: Radius.circular(6.0)
                             )
                         ),
-                        child: Text('Agregar tarjeta de crédito o débito', style: TextStyle(color: Colors.grey[600], fontSize: 15.0)),
+                        child:  DropdownButtonFormField<String>(
+                          onChanged: (v) => gender = v,
+                          isExpanded: true,
+                          icon: null,
+                          iconSize: 0,
+                          items: <String>['Masculino', 'Femenino'].map((String value) {
+                            return new DropdownMenuItem<String>(
+                              value: value == 'Femenino' ? 'f' : 'm',
+                              child: new Text(value),
+                            );
+                          }).toList(),
+                          hint: Text('Género'),
+                          decoration: InputDecoration.collapsed(hintText: null),
+
+                        ),
                       ),
                     ),
                     Expanded(
-                        child:  Container(
+                      flex: 1,
+                      child: Container(
                           height: 51.0,
                           decoration: BoxDecoration(
                               border: Border.all(color: Colors.grey),
@@ -722,202 +640,295 @@ class _RegisterPageState extends State<RegisterPage> {
                                   bottomRight: Radius.circular(6.0)
                               )
                           ),
-                          child: Icon(Icons.arrow_right, size: 42.0),
-                        )
+                          child: Icon(Icons.arrow_drop_down, size: 42.0)
+                      ),
                     ),
                   ],
                 ),
-              ),
-              Padding(padding: EdgeInsets.only(top: 16.0)),*/
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Text('Al crear tu cuenta, aceptas los ', style: TextStyle(fontFamily: 'Lato-Light', fontSize: 14.0)),
-                  InkWell(
-                    onTap: () async {
-                      const url = 'https://www.urban.taxi/terms-and-conditions.html';
-                      if (await canLaunch(url)) {
-                        await launch(url);
-                      } else {
-                        throw 'Could not launch $url';
-                      }
-                    },
-                    child: Text('Términos y Condiciones',
-                        style: TextStyle(
-                          fontFamily: 'Lato-Light',
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14.0,
-                          decoration: TextDecoration.underline,
-                        )
-                    ),
-                  )
-                ],
-              ),
-              Padding(padding: EdgeInsets.only(top: 32.0)),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.15),
-                child: defaultButton(120.0, 'Regístrate', () async {
-                  if (_registerForm.currentState.validate()) {
-                    _registerForm.currentState.save();
-
-                    _utils.loadingDialog(context);
-
-
-                    print((DateTime.now().subtract(Duration(days: 6570)).toString()).split(' ')[0]);
-                    final data = {
-                      "terms_conditions_of_use": true,
-                      "username": username,
-                      "name": firstName,
-                      "lastname": lastName,
-                      "email": email,
-                      "password": password,
-                      "confirm_password": password,
-                      "phone_number": '+${_selectedDialogCountry.phoneCode}$phoneNumber',
-                      "whatsapp_number": phoneNumber,
-                      "birthday": birthday != null ? (birthday.toString()).split(' ')[0] : (DateTime.now().subtract(Duration(days: 6570)).toString()).split(' ')[0],
-                      "gender": gender != null ? gender : 'm',
-                      "share_phone": sharePhone
-                    };
-                    
-                    final response = await _auth.postByPath(context, 'userRegister', data);
-
-                    final responseData =  jsonDecode(response.body);
-                    if (response.statusCode != 200) {
-                      _utils.closeDialog(context);
-                      return _utils.messageDialog(context, 'No se ha realizado el registro', responseData['error']['errors'][0]);
+                Padding(padding: EdgeInsets.only(top: 16.0)),
+                TextFormField(
+                  textInputAction: TextInputAction.next,
+                  focusNode: _emailFocus,
+                  onFieldSubmitted: (term){
+                    _fieldFocusChange(context, _emailFocus, _passwordFocus);
+                  },
+                  validator: (v) {
+                    final RegExp validator = RegExp(r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+");
+                    if (v == '') {
+                      return 'Este campo es obligatorio';
                     }
-
-                    /*
-
-                    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-                    var deviceName;
-
-                    if (Platform.isAndroid) {
-                      deviceName = (await deviceInfo.androidInfo).model;
-                    } else if (Platform.isIOS) {
-                      deviceName = (await deviceInfo.iosInfo).utsname.machine;
+                    if (!validator.hasMatch(v)) {
+                      return 'Ingresa un correo electrónico válido';
                     }
-
-                    final loginData = {
-                      "grant_type": "password",
-                      "username": email,
-                      "password": password,
-                      "deviceName": deviceName,
-                      "ip": await GetIp.ipAddress
-                    };
-
-                    final loginResponse = await _auth.login(loginData);
-
-
-                    if (loginResponse.statusCode == 200) {
-                      final instance = await SharedPreferences.getInstance();
-
-                      instance.setString('user_token', jsonDecode(loginResponse.body)['access_token']);
-
-                      final userResponse = await _api.getByPath(context, 'auth/me');
-
-                      if (userResponse.statusCode != 200) {
-                        _utils.closeDialog(context);
-                        _utils.messageDialog(context, 'Usuario creado', 'Se ha creado tu usuarios. Ahora debes iniciar sesión');
-
-                        return Navigator.of(context).pushNamedAndRemoveUntil('auth/login', (_) => false);
-                      }
-
-                      final userData = jsonDecode(userResponse.body);
-
-                      final cardsResponse = await _api.getByPath(context, 'cards');
-
-                      if (cardsResponse.statusCode != 200) {
-                        _utils.closeDialog(context);
-                        _utils.messageDialog(context, 'Usuario creado', 'Se ha creado tu usuarios. Ahora debes iniciar sesión');
-                      }
-
-                      final cardsData = jsonDecode(cardsResponse.body);
-
-                      final addressResponse = await _api.getByPath(context, 'address/all/${userData['data']['user']['_id']}');
-
-                      if (addressResponse.statusCode != 200) {
-                        _utils.closeDialog(context);
-                        _utils.messageDialog(context, 'Usuario creado', 'Se ha creado tu usuarios. Ahora debes iniciar sesión');
-                      }
-
-                      final addressData = jsonDecode(addressResponse.body);
-
-                      cardsBloc.modifyCards(cardsData['data']);
-                      addressBloc.modifyAddresses(addressData['data']);
-                      bloc.modifyUserData(userData['data']['user']);
-
-                      _utils.closeDialog(context);
-                      Navigator.of(context).pushNamedAndRemoveUntil('/home', (_) => false);
-
-
-                    } else {*/
-                      _utils.closeDialog(context);
-                      Navigator.of(context).pushNamedAndRemoveUntil('auth/welcome', (_) => false);
-                      return _utils.messageDialog(context, 'Usuario creado', 'Se han enviado las instrucciones a tu correo electrónico para que verifiques tu cuenta.');
-                    //}
-
-
-                  }
-                }),
-              ),
-              Padding(padding: EdgeInsets.only(top: 32.0)),
-              Text('O regístrate con:', textAlign: TextAlign.center,),
-              Padding(padding: EdgeInsets.only(top: 16.0)),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  InkWell(
-                    onTap: () => fbLogin(context),
-                    child: Container(
-                      width: 64.0,
-                      height: 64.0,
-                      padding: EdgeInsets.all(12.0),
-                      decoration: BoxDecoration(
-                          color: Colors.indigo[600],
-                          borderRadius: BorderRadius.circular(18.0)
-                      ),
-                      child: Image.asset('assets/fb-icon.png'),
-                    )
+                    return null;
+                  },
+                  onChanged: (v) => email = v,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: InputDecoration(
+                      labelText: 'Correo electrónico'
                   ),
-                  Padding(padding: EdgeInsets.only(left: 18.0)),
-                  InkWell(
-                      onTap: () => googleLogin(context),
+                ),
+                Padding(padding: EdgeInsets.only(top: 16.0)),
+                TextFormField(
+                  textInputAction: TextInputAction.done,
+                  focusNode: _passwordFocus,
+                  onFieldSubmitted: (term){
+                    _passwordFocus.unfocus();
+                  },
+                  validator: (v) => v == '' ? 'Este campo es obligatorio' : null,
+                  onChanged: (v) => password = v,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                      labelText: 'Contraseña'
+                  ),
+                ),
+                Padding(padding: EdgeInsets.only(top: 16.0)),
+                if(!Platform.isIOS)
+                DateTimeFormField(
+                  //validator: (v) => v == null ? 'Este campo es obligatorio' : null,
+                  mode: DateFieldPickerMode.date,
+                  label: 'Fecha de nacimiento',
+                  decoration: InputDecoration(
+                    prefixText: ''
+                  ),
+                  onDateSelected: (DateTime date) {
+                    setState(() {
+                      birthday = date;
+                    });
+                  },
+                  lastDate: DateTime(2021),
+                ),
+                Padding(padding: EdgeInsets.only(top: 16.0)),
+                /*InkWell(
+                  onTap: () => Navigator.of(context).pushNamed('auth/register/card'),
+                  child: Row(
+                    children: <Widget>[
+                      Expanded(
+                        flex: 6,
+                        child: Container(
+                          height: 51.0,
+                          padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 16.0),
+                          decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey),
+                              borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(6.0),
+                                  bottomLeft: Radius.circular(6.0)
+                              )
+                          ),
+                          child: Text('Agregar tarjeta de crédito o débito', style: TextStyle(color: Colors.grey[600], fontSize: 15.0)),
+                        ),
+                      ),
+                      Expanded(
+                          child:  Container(
+                            height: 51.0,
+                            decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey),
+                                borderRadius: BorderRadius.only(
+                                    topRight: Radius.circular(6.0),
+                                    bottomRight: Radius.circular(6.0)
+                                )
+                            ),
+                            child: Icon(Icons.arrow_right, size: 42.0),
+                          )
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(padding: EdgeInsets.only(top: 16.0)),*/
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Text('Al crear tu cuenta, aceptas los ', style: TextStyle(fontFamily: 'Lato-Light', fontSize: 14.0)),
+                    InkWell(
+                      onTap: () async {
+                        const url = 'https://www.urban.taxi/terms-and-conditions.html';
+                        if (await canLaunch(url)) {
+                          await launch(url);
+                        } else {
+                          throw 'Could not launch $url';
+                        }
+                      },
+                      child: Text('Términos y Condiciones',
+                          style: TextStyle(
+                            fontFamily: 'Lato-Light',
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14.0,
+                            decoration: TextDecoration.underline,
+                          )
+                      ),
+                    )
+                  ],
+                ),
+                Padding(padding: EdgeInsets.only(top: 32.0)),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.15),
+                  child: defaultButton(120.0, 'Regístrate', () async {
+                    if (_registerForm.currentState.validate()) {
+                      _registerForm.currentState.save();
+
+                      _utils.loadingDialog(context);
+
+
+                      print((DateTime.now().subtract(Duration(days: 6570)).toString()).split(' ')[0]);
+                      var data = {
+                        "terms_conditions_of_use": true,
+                        "username": username,
+                        "name": firstName,
+                        "lastname": lastName,
+                        "email": email,
+                        "password": password,
+                        "confirm_password": password,
+                        "phone_number": '+${_selectedDialogCountry.phoneCode}$phoneNumber',
+                        "whatsapp_number": phoneNumber,
+                        "birthday": birthday != null ? (birthday.toString()).split(' ')[0] : (DateTime.now().subtract(Duration(days: 6570)).toString()).split(' ')[0],
+                        "share_phone": sharePhone
+                      };
+
+                      if (gender != null){
+                       data['gender'] = gender;
+                      }
+
+                      print(data);
+                      final response = await _auth.postByPath(context, 'userRegister', data);
+
+                      final responseData =  jsonDecode(response.body);
+                      if (response.statusCode != 200) {
+                        _utils.closeDialog(context);
+                        return _utils.messageDialog(context, 'No se ha realizado el registro', responseData['error']['errors'][0]);
+                      }
+
+                      /*
+
+                      DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+                      var deviceName;
+
+                      if (Platform.isAndroid) {
+                        deviceName = (await deviceInfo.androidInfo).model;
+                      } else if (Platform.isIOS) {
+                        deviceName = (await deviceInfo.iosInfo).utsname.machine;
+                      }
+
+                      final loginData = {
+                        "grant_type": "password",
+                        "username": email,
+                        "password": password,
+                        "deviceName": deviceName,
+                        "ip": await GetIp.ipAddress
+                      };
+
+                      final loginResponse = await _auth.login(loginData);
+
+
+                      if (loginResponse.statusCode == 200) {
+                        final instance = await SharedPreferences.getInstance();
+
+                        instance.setString('user_token', jsonDecode(loginResponse.body)['access_token']);
+
+                        final userResponse = await _api.getByPath(context, 'auth/me');
+
+                        if (userResponse.statusCode != 200) {
+                          _utils.closeDialog(context);
+                          _utils.messageDialog(context, 'Usuario creado', 'Se ha creado tu usuarios. Ahora debes iniciar sesión');
+
+                          return Navigator.of(context).pushNamedAndRemoveUntil('auth/login', (_) => false);
+                        }
+
+                        final userData = jsonDecode(userResponse.body);
+
+                        final cardsResponse = await _api.getByPath(context, 'cards');
+
+                        if (cardsResponse.statusCode != 200) {
+                          _utils.closeDialog(context);
+                          _utils.messageDialog(context, 'Usuario creado', 'Se ha creado tu usuarios. Ahora debes iniciar sesión');
+                        }
+
+                        final cardsData = jsonDecode(cardsResponse.body);
+
+                        final addressResponse = await _api.getByPath(context, 'address/all/${userData['data']['user']['_id']}');
+
+                        if (addressResponse.statusCode != 200) {
+                          _utils.closeDialog(context);
+                          _utils.messageDialog(context, 'Usuario creado', 'Se ha creado tu usuarios. Ahora debes iniciar sesión');
+                        }
+
+                        final addressData = jsonDecode(addressResponse.body);
+
+                        cardsBloc.modifyCards(cardsData['data']);
+                        addressBloc.modifyAddresses(addressData['data']);
+                        bloc.modifyUserData(userData['data']['user']);
+
+                        _utils.closeDialog(context);
+                        Navigator.of(context).pushNamedAndRemoveUntil('/home', (_) => false);
+
+
+                      } else {*/
+                        _utils.closeDialog(context);
+                        Navigator.of(context).pushNamedAndRemoveUntil('auth/welcome', (_) => false);
+                        return _utils.messageDialog(context, 'Usuario creado', 'Se han enviado las instrucciones a tu correo electrónico para que verifiques tu cuenta.');
+                      //}
+
+
+                    }
+                  }),
+                ),
+                Padding(padding: EdgeInsets.only(top: 32.0)),
+                Text('O regístrate con:', textAlign: TextAlign.center,),
+                Padding(padding: EdgeInsets.only(top: 16.0)),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    InkWell(
+                      onTap: () => fbLogin(context),
                       child: Container(
                         width: 64.0,
                         height: 64.0,
                         padding: EdgeInsets.all(12.0),
                         decoration: BoxDecoration(
-                            color: Colors.red[600],
+                            color: Colors.indigo[600],
                             borderRadius: BorderRadius.circular(18.0)
                         ),
-                        child: Image.asset('assets/google-icon.png'),
+                        child: Image.asset('assets/fb-icon.png'),
                       )
-                  ),
-                  if (Platform.isIOS)
+                    ),
                     Padding(padding: EdgeInsets.only(left: 18.0)),
                     InkWell(
-                        onTap: () => appleLogin(context),
+                        onTap: () => googleLogin(context),
                         child: Container(
                           width: 64.0,
                           height: 64.0,
                           padding: EdgeInsets.all(12.0),
                           decoration: BoxDecoration(
-                              color: Colors.black,
+                              color: Colors.red[600],
                               borderRadius: BorderRadius.circular(18.0)
                           ),
-                          child: Image.asset('assets/apple-icon.png'),
+                          child: Image.asset('assets/google-icon.png'),
                         )
-                    )
-                ],
-              ),
-              Padding(padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom)),
+                    ),
+                    if (Platform.isIOS)
+                      Padding(padding: EdgeInsets.only(left: 18.0)),
+                      InkWell(
+                          onTap: () => appleLogin(context),
+                          child: Container(
+                            width: 64.0,
+                            height: 64.0,
+                            padding: EdgeInsets.all(12.0),
+                            decoration: BoxDecoration(
+                                color: Colors.black,
+                                borderRadius: BorderRadius.circular(18.0)
+                            ),
+                            child: Image.asset('assets/apple-icon.png'),
+                          )
+                      )
+                  ],
+                ),
+                Padding(padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom)),
 
-            ],
-          ),
-        )
+              ],
+            ),
+          )
+        ),
       ),
     );
   }
