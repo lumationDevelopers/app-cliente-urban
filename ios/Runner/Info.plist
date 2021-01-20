@@ -53,17 +53,15 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Application needs to access your camera</string>
+	<string>Habilita la opcion de acceder a la cámara para actualizar tu foto de perfil.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Application needs to access your current location</string>
+	<string>Urban Taxi desea saber tu ubicación para poder ubicarte de manera más exacta a la hora de empezar tu viaje.</string>
 	<key>NSLocationAlwaysUsageDescription</key>
-	<string>Application needs to access your current location</string>
+	<string>Urban Taxi desea saber tu ubicación para poder ubicarte de manera más exacta a la hora de empezar tu viaje.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Application needs to access your current location</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Application needs to access your microphone</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Application needs to access your photo library</string>
+	<string>Urban Taxi desea saber tu ubicación para poder ubicarte de manera más exacta a la hora de empezar tu viaje.</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Habilita la opcion de acceder a tu galeria de imágenes para actualizar tu foto de perfil.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>

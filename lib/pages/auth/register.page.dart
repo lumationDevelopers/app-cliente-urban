@@ -331,13 +331,15 @@ class _RegisterPageState extends State<RegisterPage> {
       //CREATE ACCOUNT WITHOUT CONFIRM PERSONAL INFO
 
       final data = {
-        "name": credential.givenName,
-        "lastname": credential.familyName,
+        "name": credential.givenName != null ? credential.givenName : '',
+        "lastname": credential.familyName != null ?credential.familyName : '',
         "email": credential.email,
         "appleid": credential.userIdentifier,
         "identity_token": credential.identityToken,
         "authorization_code": credential.authorizationCode
       };
+      print(data);
+      print('${credential.givenName}${credential.familyName}_${credential.userIdentifier}');
 
       final response = await _auth.postByPath(context, 'applesignup', {
         ...data,

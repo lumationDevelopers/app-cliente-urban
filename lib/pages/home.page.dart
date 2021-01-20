@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:after_init/after_init.dart';
@@ -395,7 +396,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         final MarkerId markerId = MarkerId('curren_loc');
         final icon = await BitmapDescriptor.fromAssetImage(
             ImageConfiguration(devicePixelRatio: 2.5),
-            'assets/rides/car-icon.png');
+            Platform.isIOS
+                ? 'assets/rides/car-icon.png'
+                : 'assets/rides/car-icon_android.png');
         setState(() {
           if (v['location']['lat'] != null && v['location']['lat'] != '') {
             markers.remove(markerId);
