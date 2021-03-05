@@ -112,7 +112,7 @@ class _ScheduledRideDetailPageState extends State<ScheduledRideDetailPage> with 
                   ),
                   ListTile(
                           title: Container(
-                            child: Text(new DateFormat('dd/MM/yyyy HH:mm').format(DateTime.parse(args.data['request_time'])), overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 16.0)),
+                            child: Text(new DateFormat('dd/MM/yyyy HH:mm').format(DateTime.parse(args.data['pickup_time'])), overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 16.0)),
                           ),
                           subtitle: Text(args.data['payment_method']['display_name'], style: TextStyle(fontSize: 16.0)),
                           trailing: Container(

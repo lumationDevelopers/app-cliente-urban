@@ -14,6 +14,7 @@ import 'package:client/bloc/rideStatus.bloc.dart';
 import 'package:client/bloc/user.bloc.dart';
 import 'package:client/credentials.dart';
 import 'package:client/pages/rides/ridePilotInfo.page.dart';
+import 'package:client/routes/routes.dart';
 import 'package:client/services/api.service.dart';
 import 'package:client/utils/utils.dart';
 import 'package:client/widgets/defaultButton.dart';
@@ -43,6 +44,10 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   final _formGender = GlobalKey<FormState>();
   var _requestedGender;
   bool requestGender = false;
+
+  bool changeTripPrice = false;
+  String newPriceTrip = "0.0";
+
 
   final Utils _utils = new Utils();
 
@@ -242,10 +247,146 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
   }
 
+
+
+  Future openDialog(BuildContext context) {
+    return showDialog(
+      barrierDismissible: true,
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Container(
+            width: MediaQuery.of(context).size.width * .8,
+            height: 246,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(15),
+              color: Colors.black,
+            ),
+            child: Column(
+              children: [
+                SizedBox(
+                  height: 10,
+                ),
+                Text('Nueva tarifa de viaje' , style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 22,
+                ),),
+                SizedBox(
+                  height: 10,
+                ),
+                Container(
+                  width: MediaQuery.of(context).size.width,
+                  height: 200,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Header ------------------------------------------------------------------
+                      Container(
+                        padding: EdgeInsets.only(top: 10, right: 25, left: 25),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Flexible(
+                              child:
+                              Text('La tarifa de tu viaje ha cambiado, debido a tarifas dinamicas el nuevo precio es: Q.$newPriceTrip',
+                                style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Header ------------------------------------------------------------------
+                      SizedBox(
+                        height: 25,
+                      ),
+                      Container(
+                          padding: EdgeInsets.only(left: 12.0, right: 12.0, top: 25),
+                          child: Row(
+                            children: <Widget>[
+                              Expanded(
+                                flex: 1,
+                                child: defaultButton(
+                                    double.infinity,
+                                    'Aceptar',
+                                    accceptedAction,
+                                ),
+                              ),
+                              Padding(padding: EdgeInsets.only(right: 16.0)),
+                              Expanded(
+                                flex: 1,
+                                child: defaultButton(
+                                    double.infinity,
+                                    'Cancelar',
+                                    deniedAction,
+                                    color: Colors.red
+                                ),
+                              ),
+
+                            ],
+                          )
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void deniedAction() {
+    deniedDinamycFare();
+    Navigator.of(context).pop();
+
+    setState(() {
+      lookingForPilot = false;
+      _polyLines = {};
+      markers = {};
+      mapScaleHeight = 1.0;
+      currentWaypointLocation = null;
+    });
+
+    mapUserLocation();
+
+    Navigator.of(context).pushNamedAndRemoveUntil('/home', (_) => false);
+
+
+    // _sheetController.snapToPosition(SnapPosition(positionFactor: -1.1, snappingDuration: Duration(seconds: 2)));
+    //
+    // new Timer(Duration(seconds: 2), () {
+    //   setState(() {
+    //     showUrbanServices = false;
+    //   });
+    //   _sheetController.snapToPosition(SnapPosition(positionFactor: 0.0));
+    // });
+  }
+
+  void accceptedAction() {
+    setState(() {
+      lookingForPilot = true;
+    });
+    Navigator.of(context).pop();
+    acceptedDinamycFare();
+    _sheetController.snapToPosition(SnapPosition(positionFactor: -0.8));
+  }
+
+
   @override
   void initState() {
     super.initState();
-
     BackButtonInterceptor.add(myInterceptor);
   }
 
@@ -377,7 +518,33 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
   bool rideAccepted = false;
   var _socketTrips;
   LatLng _onRideLocation;
+  Map<String, dynamic> dynamicFareLocal;
+
+  void acceptedDinamycFare() {
+    print('LLEGO al final al aceptar');
+    final data = {
+      "trip": dynamicFareLocal,
+      "fare": dynamicFareLocal['fare'].toString(),
+      "accepted": true,
+    };
+    print(data);
+    _socketTrips.emit('dynamicfare', data );
+  }
+
+  void deniedDinamycFare() {
+    print('LLEGO al final al cancelar ');
+    final data = {
+      "trip": dynamicFareLocal,
+      "fare": dynamicFareLocal['fare'].toString(),
+      "accepted": false,
+    };
+    print(data['fare']);
+    print(data['accepted']);
+    _socketTrips.emit('dynamicfare', data );
+  }
+
   void startRide(String rideId) async {
+    int count = 0;
     final storage = await SharedPreferences.getInstance();
     _socketTrips = IO.io('$socketUri/trips?token=${storage.getString('user_token')}&trip=$rideId', <String, dynamic>{
       'transports': ['websocket'],
@@ -389,10 +556,34 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       print(_socketTrips.connected);
     });
 
+    _socketTrips.on('dynamicfare', (data)  {
+      Map<String, dynamic> tripDataLocal = data;
+      dynamicFareLocal = tripDataLocal;
+      if(tripDataLocal['fare']!=null) {
+        String newPrice = tripDataLocal['fare'].toString();
+        setState(() {
+          newPriceTrip = newPrice;
+        });
+        lookingForPilot = false;
+        print(newPriceTrip);
+        if(count == 0) {
+          openDialog(context);
+          count++;
+        }
+      }
+    });
+
     _socketTrips.on('driverlocation', (v) async {
+
+      print('<-----------------------------------');
       print(v);
+      print('<-----------------------------------');
+
+
+      await getUserInfo(connectToSockets: false);
 
       if (rideAccepted == true) {
+
         final MarkerId markerId = MarkerId('curren_loc');
         final icon = await BitmapDescriptor.fromAssetImage(
             ImageConfiguration(devicePixelRatio: 2.5),
@@ -422,8 +613,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
           lookingForPilot = false;
         });
 
-        if (v['status'] == 'Available') {
-          rideStatusBloc.modifyRideStatus('Started');
+
+        if (v['status'] == 'Execution') {
+          rideStatusBloc.modifyRideStatus('Execution');
         } else {
           rideStatusBloc.modifyRideStatus(v['status']);
         }
@@ -461,7 +653,11 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
         }
       }
 
-      if (v['status'] == 'Finished') {
+      print('======================================');
+      print(v['status']);
+      print('======================================');
+
+      if (v['status'] == 'Confirmed') {
         _socketTrips.disconnect();
       }
 
@@ -471,7 +667,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
           rideAccepted = false;
         });
 
-        getUserInfo(connectToSockets: false);
+        await getUserInfo(connectToSockets: false);
       }
 
       if (v['is_accepted'] == true || v['status'] == 'Passenger onboard' || v['status'] == 'Waiting') {
@@ -479,6 +675,13 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
           rideAccepted = true;
         });
       }
+
+      if (v['status'] != 'Reserved') {
+        lookingForPilot = false;
+      } else {
+        lookingForPilot = true;
+      }
+
     });
   }
 
@@ -563,10 +766,11 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     if (scheduledRide == null) {
       rideResponse = await _api.postByPath(context, 'trips/newtrip', data);
     } else {
-      rideResponse = await _api.postByPath(context, 'trips/newscheduledtrip', data);
+      rideResponse = await _api.postByPath(context, 'trips/newtrip', data);
     }
 
     final rideData = jsonDecode(rideResponse.body);
+    dynamicFareLocal = rideData['data'];
 
     if (rideData['success'] == false) {
       setState(() {
@@ -618,7 +822,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
     rideBloc.modifyRideData(rideData['data']);
 
-    rideStatusBloc.modifyRideStatus('Started');
+    rideStatusBloc.modifyRideStatus('Execution');
 
     setState(() {
       mapScaleHeight = 1.0;
@@ -688,6 +892,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     chatSocketBloc.modifySocket(_socket);
 
     _socket.connect();
+
     _socket.on('connect', (_) {
       if (!_socket.connected) {
         return startChat(ride);
@@ -854,7 +1059,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
     final userData = jsonDecode(userResponse.body);
 
-    if (userData['data']['user']['current_trip'] != null && !onRide) {
+    // print(userData);
+
+    if (userData['data']['user']['current_trip'] != null) {
 
       final rideResponse = await _api.getByPath(context, 'trips/${userData['data']['user']['current_trip']}');
 
@@ -870,9 +1077,12 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
       });
 
       rideBloc.modifyRideData(rideData['data']);
+
       print(rideData['data']['trip_status']);
-      if (rideData['data']['trip_status'] == 'Created') {
-        rideStatusBloc.modifyRideStatus('Started');
+      dynamicFareLocal = rideData['data'];
+
+      if (rideData['data']['trip_status'] == 'Reserved') {
+        rideStatusBloc.modifyRideStatus('Reserved');
       } else {
         rideStatusBloc.modifyRideStatus(rideData['data']['trip_status']);
       }
@@ -1041,7 +1251,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                               )
                           ),
                         ),
-                      if (!showUrbanServices && !addingNewPoint && (snapshot.data == 'Pending' || snapshot.data == 'Finished' || snapshot.data == 'Cancelled'))
+                      if (!showUrbanServices && !addingNewPoint && (snapshot.data == 'Pending' || snapshot.data == 'Confirmed' || snapshot.data == 'Cancelled'))
                         SnappingSheet(
                           snappingSheetController: _sheetController,
                           lockOverflowDrag: true,
@@ -1084,8 +1294,11 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                                               searchPlace(input);
                                             },
                                             onTap: () {
-                                              searchListIsOpen = true;
-                                              _sheetController.snapToPosition(SnapPosition(positionFactor: 1));
+                                              // print('Si toque esta cosa!!!!!');
+                                              setState(() {
+                                                searchListIsOpen = true;
+                                                _sheetController.snapToPosition(SnapPosition(positionFactor: 1));
+                                              });
                                             },
                                             decoration: InputDecoration(
                                                 hintText: '¿A dónde te diriges?'
@@ -1110,7 +1323,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                                                           itemBuilder: (context, index) {
                                                             return InkWell(
                                                                 onTap: () {
+
                                                                   _sheetController.snapToPosition(SnapPosition(positionFactor: -1.0));
+
                                                                   placeSelected = {
                                                                     "description": snapshot.data[index]['address_name'],
                                                                   };
@@ -1518,36 +1733,38 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                             ],
                           ),
                         ),
-                      if ((snapshot.data == 'Started' || snapshot.data == 'Passenger onboard') && lookingForPilot == false)
-                        Positioned(
-                          child: new Align(
-                              alignment: FractionalOffset.bottomLeft,
-                              child: Container(
-                                  margin: EdgeInsets.only(left: 24.0),
-                                  height: snapshot.data == 'Passenger onboard' ? MediaQuery.of(context).padding.bottom + 262 : MediaQuery.of(context).padding.bottom + 212,
-                                  width: 72.0,
-                                  decoration: BoxDecoration(
-                                    color: Colors.black,
-                                    borderRadius: BorderRadius.circular(8.0),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.center,
-                                    children: <Widget>[
-                                      Padding(padding: EdgeInsets.only(top: 6.0)),
-                                      Text('Tiempo restante', textAlign: TextAlign.center, style: TextStyle(color: Colors.white)),
-                                      Container(
-                                        height: 32.0,
-                                        width: double.infinity,
-                                        color: Colors.black,
-                                        alignment: Alignment.center,
-                                        child: Text(estimatedTime == '0 mins' ? '...' : estimatedTime, style: TextStyle(color: Colors.white)),
-                                      ),
-                                    ],
-                                  )
-                              )
+                      if(dynamicFareLocal != null)
+                        if ((dynamicFareLocal['trip_status'] == 'Execution' || snapshot.data == 'Passenger onboard') && lookingForPilot == false)
+                          Positioned(
+                            child: new Align(
+                                alignment: FractionalOffset.bottomLeft,
+                                child: Container(
+                                    margin: EdgeInsets.only(left: 24.0),
+                                    height: snapshot.data == 'Passenger onboard' ? MediaQuery.of(context).padding.bottom + 262 : MediaQuery.of(context).padding.bottom + 212,
+                                    width: 72.0,
+                                    decoration: BoxDecoration(
+                                      color: Colors.black,
+                                      borderRadius: BorderRadius.circular(8.0),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      children: <Widget>[
+                                        Padding(padding: EdgeInsets.only(top: 6.0)),
+                                        Text('Tiempo restante', textAlign: TextAlign.center, style: TextStyle(color: Colors.white)),
+                                        Container(
+                                          height: 32.0,
+                                          width: double.infinity,
+                                          color: Colors.black,
+                                          alignment: Alignment.center,
+                                          child: Text(estimatedTime == '0 mins' ? '...' : estimatedTime, style: TextStyle(color: Colors.white)),
+                                        ),
+                                      ],
+                                    )
+                                )
+                            ),
                           ),
-                        ),
-                      if (snapshot.data == 'Passenger onboard')
+                      if(dynamicFareLocal != null)
+                        if (snapshot.data == 'Passenger onboard')
                         Positioned(
                           child: new Align(
                               alignment: FractionalOffset.bottomLeft,
@@ -1576,7 +1793,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                               )
                           ),
                         ),
-                      if ((snapshot.data == 'Accepted' || snapshot.data == 'Started' || snapshot.data == 'Paused' || snapshot.data == 'Passenger onboard') && lookingForPilot == false)
+                      if(dynamicFareLocal != null)
+                        if ((dynamicFareLocal['trip_status'] == 'Quotation' || dynamicFareLocal['trip_status'] == 'Execution' || dynamicFareLocal['trip_status'] == 'Paused' || snapshot.data == 'Passenger onboard') && lookingForPilot == false)
                         SnappingSheet(
                           snappingSheetController: _sheetController,
                           lockOverflowDrag: true,
@@ -1622,9 +1840,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                                               child: StreamBuilder(
                                                 stream: rideBloc.rideStream,
                                                 builder: (context, snapshot) {
-                                                  if (snapshot.data != null && snapshot.data['driver']['avatar'] != null) {
+                                                  if (dynamicFareLocal != null && dynamicFareLocal['driver']['avatar'] != null) {
                                                     return Image.network(
-                                                      snapshot.data['driver']['avatar'].toString(),
+                                                      dynamicFareLocal['driver']['avatar'].toString(),
                                                       fit: BoxFit.cover,
                                                     );
                                                   } else {
@@ -1634,7 +1852,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                                               )
                                           ),
                                         ),
-                                        title: Text(rideSnapshot.data['driver']['first_name'].toString() + ' ' + rideSnapshot.data['driver']['lastname'].toString(), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18.0)),
+                                        title: Text((dynamicFareLocal['driver']['first_name'].toString() ?? '')  + ' ' + (dynamicFareLocal['driver']['lastname'].toString() ?? ''), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18.0)),
                                         trailing: Container(
                                           width: 64.0,
                                           child: Row(
@@ -1642,11 +1860,11 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                                             mainAxisAlignment: MainAxisAlignment.end,
                                             children: <Widget>[
                                               Icon(Icons.star, color: Colors.black, size: 16.0),
-                                              Text(rideSnapshot.data['driver']['rating']?.toStringAsFixed(2) ?? '', style: TextStyle(fontSize: 16.0, fontFamily: 'Lato-light',))
+                                              Text(dynamicFareLocal['driver']['rating']?.toStringAsFixed(2) ?? '', style: TextStyle(fontSize: 16.0, fontFamily: 'Lato-light',))
                                             ],
                                           ),
                                         ),
-                                        subtitle: Text(rideSnapshot.data['vehicle']['make'].toString() + ' ' + rideSnapshot.data['vehicle']['model'].toString() + ' | ' + rideSnapshot.data['vehicle']['license_plate'].toString(), style: TextStyle(fontSize: 16.0)),
+                                        subtitle: Text(dynamicFareLocal['vehicle']['make'].toString() + ' ' + dynamicFareLocal['vehicle']['model'].toString() + ' | ' + dynamicFareLocal['vehicle']['license_plate'].toString(), style: TextStyle(fontSize: 16.0)),
                                       ),
                                     ),
                                   )
@@ -1654,7 +1872,8 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                               )
                           ),
                         ),
-                      if (snapshot.data == 'Finished')
+                      if(dynamicFareLocal != null)
+                        if (snapshot.data == 'Confirmed')
                         Container(
                           width: double.infinity,
                           height: MediaQuery.of(context).size.height,
@@ -1683,9 +1902,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                                           child: StreamBuilder(
                                             stream: rideBloc.rideStream,
                                             builder: (context, snapshot) {
-                                              if (snapshot.data != null && snapshot.data['driver']['avatar'] != null) {
+                                              if (dynamicFareLocal != null && dynamicFareLocal['driver']['avatar'] != null) {
                                                 return Image.network(
-                                                  snapshot.data['driver']['avatar'].toString(),
+                                                  dynamicFareLocal['driver']['avatar'].toString(),
                                                   fit: BoxFit.cover,
                                                 );
                                               } else {
@@ -1696,7 +1915,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                                       ),
                                     ),
                                     Padding(padding: EdgeInsets.only(top: 12.0)),
-                                    Text(rideSnapshot.data['driver']['first_name'].toString() + ' ' + rideSnapshot.data['driver']['lastname'].toString(), style: TextStyle(fontSize: 18.0)),
+                                    Text((dynamicFareLocal['driver']['first_name'].toString() ?? '') + ' ' + (dynamicFareLocal['driver']['lastname'].toString() ?? ''), style: TextStyle(fontSize: 18.0)),
                                     Padding(padding: EdgeInsets.only(top: 12.0)),
                                     SmoothStarRating(
                                         allowHalfRating: false,
@@ -1890,9 +2109,23 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                                   driverArrival = false;
                                   driverArrivalMessageDisplayed = false;
                                   rideAccepted = false;
+                                  dynamicFareLocal = null;
+                                  searchListIsOpen = false;
                                 });
 
                                 mapUserLocation();
+
+                                Navigator.of(context).pushNamedAndRemoveUntil('/home', (_) => false);
+
+                                // _sheetController.snapToPosition(SnapPosition(positionFactor: -1.1, snappingDuration: Duration(seconds: 2)));
+                                //
+                                // new Timer(Duration(seconds: 3), () {
+                                //   setState(() {
+                                //     showUrbanServices = false;
+                                //   });
+                                //   _sheetController.snapToPosition(SnapPosition(positionFactor: 0.0));
+                                // });
+
 
                               }, color: Colors.yellow[700], textColor: Colors.black)
                             ],
@@ -2016,6 +2249,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                                             onTap: () {
                                               searchListIsOpen = true;
                                               _sheetController.snapToPosition(SnapPosition(positionFactor: 1));
+                                              setState(() {
+                                                print('Veamos que paso');
+                                              });
                                             },
                                             decoration: InputDecoration(
                                                 hintText: '¿A dónde te diriges?'

@@ -29,6 +29,7 @@ class _ScheduledRidesPageState extends State<ScheduledRidesPage> with AfterInitM
     final data = jsonDecode(response.body);
 
     print(data['data']);
+
     if (data['success'] == false) {
       Navigator.of(context).pop();
       return _utils.messageDialog(context, 'Error', 'No se pudieron cargar los datos.');
@@ -37,6 +38,9 @@ class _ScheduledRidesPageState extends State<ScheduledRidesPage> with AfterInitM
     setState(() {
       rides = data['data'];
     });
+
+    print(rides);
+
 
   }
 
@@ -111,7 +115,7 @@ class _ScheduledRidesPageState extends State<ScheduledRidesPage> with AfterInitM
 
                         ListTile(
                                 title: Text('${rides[index]['destination']['address']}', overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 20.0)),
-                                subtitle: Text( new DateFormat('dd/MM/yyyy HH:mm').format(DateTime.parse(rides[index]['request_time']))),
+                                subtitle: Text( new DateFormat('dd/MM/yyyy HH:mm').format(DateTime.parse(rides[index]['pickup_time']))),
                                 trailing: Container(
                                   height: 42.0,
                                   child: Column(
