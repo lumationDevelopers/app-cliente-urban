@@ -185,7 +185,7 @@ class _PaymentMethodSelectPageState extends State<PaymentMethodSelectPage> with 
     paymentMethodsBloc = Provider.of(context).paymentMethodsBloc;
     paymentMethodSelectedBloc = Provider.of(context).paymentMethodSelectedBloc;
     return Scaffold(
-      appBar: urbanAppBar(context, '¿Como pagarás tu viaje?', true),
+      appBar: urbanAppBar(context, '¿Cómo pagarás tu viaje?', true),
       body: StreamBuilder(
         stream: cardsBloc.cardsStream,
         builder: (context, snapshot) {

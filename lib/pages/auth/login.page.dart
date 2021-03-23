@@ -130,7 +130,7 @@ class _LoginPageState extends State<LoginPage> {
       final userResponse = await _api.getByPath(context, 'auth/me');
 
       print(userResponse.body);
-      if (userResponse.statusCode != 200) {
+      if (userResponse.statusCode >= 400) {
         _utils.closeDialog(context);
         return _utils.messageDialog(context, 'No se inicio sesión', 'Hubo algún error en el servidor. Inténtalo de nuevo' );
 
@@ -140,7 +140,7 @@ class _LoginPageState extends State<LoginPage> {
 
       final cardsResponse = await _api.getByPath(context, 'cards/owncards/${userData['data']['user']['_id']}');
 
-      if (cardsResponse.statusCode != 200) {
+      if (cardsResponse.statusCode >= 400) {
         _utils.closeDialog(context);
         return _utils.messageDialog(context, 'No se inicio sesión', 'Hubo algún error en el servidor. Inténtalo de nuevo' );
       }
@@ -149,7 +149,7 @@ class _LoginPageState extends State<LoginPage> {
 
       final addressResponse = await _api.getByPath(context, 'address/all/${userData['data']['user']['_id']}');
 
-      if (addressResponse.statusCode != 200) {
+      if (addressResponse.statusCode >= 400) {
         _utils.closeDialog(context);
         return _utils.messageDialog(context, 'No se inicio sesión', 'Hubo algún error en el servidor. Inténtalo de nuevo' );
       }
@@ -186,7 +186,7 @@ class _LoginPageState extends State<LoginPage> {
 
         final rideResponse = await _api.getByPath(context, 'trips/${userData['data']['user']['current_trip']}');
 
-        if (rideResponse.statusCode != 200) {
+        if (rideResponse.statusCode >= 400) {
           rideStatusBloc.modifyRideStatus('Pending');
           return _utils.messageDialog(context, 'No se inicio sesión', 'Hubo algún error en el servidor. Inténtalo de nuevo' );
         }
@@ -703,9 +703,8 @@ class _LoginPageState extends State<LoginPage> {
                         child: Image.asset('assets/google-icon.png'),
                       )
                   ),
-                  if (Platform.isIOS)
-                    Padding(padding: EdgeInsets.only(left: 18.0)),
-                    InkWell(
+                if(Platform.isIOS)
+                    Padding(padding: EdgeInsets.only(left: 18.0),child: InkWell(
                         onTap: () => appleLogin(context),
                         child: Container(
                           width: 64.0,
@@ -717,7 +716,8 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           child: Image.asset('assets/apple-icon.png'),
                         )
-                    )
+                    ) ,),
+
                 ],
               ),
               Padding(padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom)),

@@ -2091,6 +2091,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
 
                                 final rateResponse = await _api.putByPath(context, 'trips/ratedriver/${rideBloc.rideInfo['_id']}', data);
 
+                                print('**************');
                                 print(rateResponse.body);
 
                                 rideStatusBloc.modifyRideStatus('Pending');

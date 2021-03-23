@@ -24,7 +24,7 @@ urbanAppBar(BuildContext context, String title, bool modal) {
             centerTitle: false,
             title: Padding(
               padding: EdgeInsets.only(bottom: 28.0),
-              child: Text(title, style: TextStyle(fontSize: 37.0, fontWeight: FontWeight.bold,))
+              child: Text(title, style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold,))
             ),
           ), preferredSize: Size.fromHeight(68.0))
   );

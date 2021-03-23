@@ -10,7 +10,7 @@
 	</array>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.co.lumation.urbanclient.onesignal</string>
+		<string>group.do.lumation.urbanclient</string>
 	</array>
 </dict>
 </plist>
