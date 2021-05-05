@@ -60,8 +60,8 @@
 	<string>Urban Taxi desea saber tu ubicación para poder ubicarte de manera más exacta a la hora de empezar tu viaje.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Urban Taxi desea saber tu ubicación para poder ubicarte de manera más exacta a la hora de empezar tu viaje.</string>
-    <key>NSPhotoLibraryUsageDescription</key>
-    <string>Habilita la opcion de acceder a tu galeria de imágenes para actualizar tu foto de perfil.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Habilita la opcion de acceder a tu galeria de imágenes para actualizar tu foto de perfil.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
