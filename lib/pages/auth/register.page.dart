@@ -909,19 +909,21 @@ class _RegisterPageState extends State<RegisterPage> {
                         )
                     ),
                     if (Platform.isIOS)
-                      Padding(padding: EdgeInsets.only(left: 18.0)),
-                      InkWell(
-                          onTap: () => appleLogin(context),
-                          child: Container(
-                            width: 64.0,
-                            height: 64.0,
-                            padding: EdgeInsets.all(12.0),
-                            decoration: BoxDecoration(
-                                color: Colors.black,
-                                borderRadius: BorderRadius.circular(18.0)
-                            ),
-                            child: Image.asset('assets/apple-icon.png'),
-                          )
+                      Padding(
+                        padding: EdgeInsets.only(left: 18.0),
+                        child: InkWell(
+                            onTap: () => appleLogin(context),
+                            child: Container(
+                              width: 64.0,
+                              height: 64.0,
+                              padding: EdgeInsets.all(12.0),
+                              decoration: BoxDecoration(
+                                  color: Colors.black,
+                                  borderRadius: BorderRadius.circular(18.0)
+                              ),
+                              child: Image.asset('assets/apple-icon.png'),
+                            )
+                        ),
                       )
                   ],
                 ),
